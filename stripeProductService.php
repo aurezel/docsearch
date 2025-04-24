@@ -178,17 +178,17 @@ class StripeProductService
     }
 }
 
-// ========== 用法示例 ==========
-
-$apiKey = 'sk_live_xxx'; // 替换为你的实际Stripe密钥
-$priceArray = range(5, 12); // 提供的价格数组，如 [5,6,7,8,9,10,11,12]
-$productNames = [
-    "Entire Total", "Full Total", "Overall Total", "Complete Total", "Whole Total",
-    "Sum Total", "Gross Total", "Final Amount", "Complete Sum", "Grand Total"
-];
-$productCount = 2; // 生成2个产品
-$type = 2; // type=1 生成一个CSV文件，type=2 生成两个CSV文件
-
-$generator = new StripeProductService($apiKey, $priceArray, 'usd', $productNames, $productCount, $type);
-$products = $generator->createProducts();
-print_r($products); // 输出产品信息和价格
+//// ========== 用法示例 ==========
+//
+//$apiKey = 'sk_live_xxx'; // 替换为你的实际Stripe密钥
+//$priceArray = range(5, 12); // 提供的价格数组，如 [5,6,7,8,9,10,11,12]
+//$productNames = [
+//    "Entire Total", "Full Total", "Overall Total", "Complete Total", "Whole Total",
+//    "Sum Total", "Gross Total", "Final Amount", "Complete Sum", "Grand Total"
+//];
+//$productCount = 2; // 生成2个产品
+//$type = 2; // type=1 生成一个CSV文件，type=2 生成两个CSV文件
+//
+//$generator = new StripeProductService($apiKey, $priceArray, 'usd', $productNames, $productCount, $type);
+//$products = $generator->createProducts();
+//print_r($products); // 输出产品信息和价格
