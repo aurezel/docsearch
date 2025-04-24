@@ -1,0 +1,10 @@
+
+
+refund 批量退款 默认transaction.csv
+php main.php --refund 
+refund 单个退款
+php main.php --refund --transactionId=ch_xxxxxxxxxx
+type |default:7days|1:15|2:30|3:60|4:60-120|5:120-180
+php main.php --search --last4s=1234[,2345] --type=1
+php main.php --search --emails=a@b.com --type=1
+php main.php --search --transactionIds=ch_xxxxx --type=1

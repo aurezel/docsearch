@@ -10,12 +10,6 @@ require_once 'stripeProductService.php';
 $options = getopt('', ['refund', 'transactionId:', 'amount:', 'createProduct', 'productName:', 'productPrice:','search','last4s:','emails','transactionIds','type:']);
 
 if (isset($options['refund'])) {
-    // 处理退款操作
-//    if (!isset($options['transactionId'])) {
-//        echo "Error: --transactionId is required for refund.\n";
-//        exit(1);
-//    }
-
 
     $amount = isset($options['amount']) ? $options['amount'] : null;
 
@@ -26,7 +20,7 @@ if (isset($options['refund'])) {
         $refundService->processRefundFromFile(TRANSACTION_FILE);
     }else{
         $transactionId = $options['transactionId'];
-        $refund = $refundService->refundCharge($transactionId, $amount);
+        $refund = $refundService->processRefundManually($transactionId, $amount);
         echo "Refund processed for transaction ID: $transactionId\n";
         echo "Refund status: " . $refund->status . "\n";
     }
@@ -77,10 +71,13 @@ if (isset($options['refund'])) {
 } elseif (isset($options['search'])) {
     $param = [];
     if (isset($options['last4s'])) {
-        $param['last4s']=$options['last4s'];
+        $param['last4s']=anyToArray($options['last4s']);
     }
     if (isset($options['emails'])) {
-        $param['emails']=$options['emails'];
+        $param['emails']=anyToArray($options['emails']);
+    }
+    if (isset($options['transactionIds'])) {
+        $param['transactionIds']=anyToArray($options['transactionIds']);
     }
     if (isset($options['type'])) {
         $param['type']=$options['type'];
@@ -93,4 +90,22 @@ if (isset($options['refund'])) {
 }else {
     echo "Error: Invalid command. Use --refund for refund, or --createProduct for product creation.\n";
     exit(1);
+}
+
+function anyToArray($input) {
+    if (is_array($input)) {
+        // 支持多次 --last4s=xxxx，合并所有
+        $result = [];
+        foreach ($input as $item) {
+            foreach (explode(',', $item) as $piece) {
+                if (trim($piece) !== '') {
+                    $result[] = trim($piece);
+                }
+            }
+        }
+        return $result;
+    }
+    if ($input === null || $input === '') return [];
+    // 单值或逗号分隔
+    return array_filter(array_map('trim', explode(',', $input)));
 }
