@@ -51,14 +51,17 @@ class StripeQueryService
         // 2. 邮箱分组处理
         $emailToCustomerId = [];
         $noCustomerEmails = [];
-        foreach ($emails as $email) {
-            $customers = \Stripe\Customer::all(['email' => $email]);
-            if (!empty($customers->data)) {
-                $emailToCustomerId[$email] = $customers->data[0]->id;
-            } else {
-                $noCustomerEmails[] = $email;
+        if(!empty($emails)){
+            foreach ($emails as $email) {
+                $customers = \Stripe\Customer::all(['email' => $email]);
+                if (!empty($customers->data)) {
+                    $emailToCustomerId[$email] = $customers->data[0]->id;
+                } else {
+                    $noCustomerEmails[] = $email;
+                }
             }
         }
+
 
         // 3. 通过客户ID查交易
         if(!empty($emailToCustomerId)){
