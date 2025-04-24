@@ -88,9 +88,9 @@ class StripeQueryService
                 'created' => ['gte' => $startTime, 'lte' => $endTime]
             ];
             foreach (Charge::all($chargeParams)->autoPagingIterator() as $charge) {
-                $email = strtolower($charge->billing_details->email ?? $charge->receipt_email ?? '');
-                $matchEmail = empty($emailSet) ? true : isset($emailSet[$email]);
-                $matchLast4 = empty($last4s) ? true : isset($last4Set[$charge->payment_method_details->card->last4 ?? '']);
+                $email = strtolower($charge->billing_details->email ?? $charge->receipt_email ?? '');echo $email."\n";
+                $matchEmail = empty($emailSet) ? true : isset($emailSet[$email]); var_dump("emails:",$matchEmail);
+                $matchLast4 = empty($last4s) ? true : isset($last4Set[$charge->payment_method_details->card->last4 ?? '']); var_dump("last4:",$matchLast4);
                 if (($matchEmail || $matchLast4)) {
                     $results[] = $this->formatCharge($charge);
                 }
