@@ -11,10 +11,10 @@ $options = getopt('', ['refund', 'transactionId:', 'amount:', 'createProduct', '
 
 if (isset($options['refund'])) {
     // 处理退款操作
-    if (!isset($options['transactionId'])) {
-        echo "Error: --transactionId is required for refund.\n";
-        exit(1);
-    }
+//    if (!isset($options['transactionId'])) {
+//        echo "Error: --transactionId is required for refund.\n";
+//        exit(1);
+//    }
 
 
     $amount = isset($options['amount']) ? $options['amount'] : null;
