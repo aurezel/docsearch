@@ -175,22 +175,27 @@ class StripeQueryService
 
     public function toCsv(array $data)
     {
+        // 定义 CSV 文件的列标题
         $lines = [];
-        $lines[] = 'email,transaction_id,amount,currency,status,paymentIntent,refundStatus,refundAmount,created_at';
+        $lines[] = ['email', 'transaction_id', 'amount', 'currency', 'status', 'paymentIntent', 'refundStatus', 'refundAmount', 'created_at'];
+
+        // 遍历数据并将每行数据添加到 $lines 数组
         foreach ($data as $row) {
-            $lines[] = implode(',', array_map(function($v) {
-                return '"' . str_replace('"', '""', $v) . '"';
-            }, $row));
+            $lines[] = $row;
         }
-        echo  implode("\n", $lines);
-        $this->saveCSV(TRANSACTION_FILE,$lines);
+
+        // 输出 CSV 到屏幕
+        echo "Generated CSV:\n";
+        $this->saveCSV(TRANSACTION_FILE, $lines);
     }
 
     private function saveCSV($filename, $data)
     {
+        // 打开文件进行写入
         $file = fopen($filename, 'w');
         foreach ($data as $row) {
-            fputcsv($file, explode(',', $row));
+            // 使用 fputcsv 直接将数组写入文件，自动处理引号和分隔符
+            fputcsv($file, $row);
         }
         fclose($file);
         echo "CSV file '$filename' generated successfully!\n";
