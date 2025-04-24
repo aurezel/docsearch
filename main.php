@@ -75,25 +75,15 @@ if (isset($options['refund'])) {
     echo "Product created: " . $product->name . "\n";
     echo "Product ID: " . $product->id . "\n";
 } elseif (isset($options['search'])) {
-    // 处理产品创建
+    $param = [];
     if (isset($options['last4'])) {
          $param['last4s']=$options['last4'];
     }
-    if (!isset($options['productName'])) {
-        $productName = [
-            "Entire Total", "Full Total", "Overall Total", "Complete Total", "Whole Total",
-            "Sum Total", "Gross Total", "Final Amount", "Complete Sum", "Grand Total"
-        ];
-    }
 
-    $productPrice = $options['productPrice'];
+    $smartSearch = new StripeQueryService(STRIPE_SK);
+    $result = $smartSearch->smartSearch($param);
 
-    // 创建产品服务实例
-    $productService = new StripeProductService(STRIPE_SK,PRODUCT_PRICE,LOCAL_CURRENCY,$productName,3,1);
-    $product = $productService->createProduct();
-
-    echo "Product created: " . $product->name . "\n";
-    echo "Product ID: " . $product->id . "\n";
+    var_dump($result);
 }else {
     echo "Error: Invalid command. Use --refund for refund, or --createProduct for product creation.\n";
     exit(1);
