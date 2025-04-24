@@ -7,7 +7,7 @@ require_once 'stripeProductService.php';
 
 //php main.php -refund --translateId=
 // 获取命令行参数
-$options = getopt('', ['refund', 'transactionId:', 'amount:', 'createProduct', 'productName:', 'productPrice:','search','last4s:']);
+$options = getopt('', ['refund', 'transactionId:', 'amount:', 'createProduct', 'productName:', 'productPrice:','search','last4s:','emails','transactionIds','type:']);
 
 if (isset($options['refund'])) {
     // 处理退款操作
@@ -77,13 +77,19 @@ if (isset($options['refund'])) {
 } elseif (isset($options['search'])) {
     $param = [];
     if (isset($options['last4s'])) {
-         $param['last4s']=$options['last4s'];
+        $param['last4s']=$options['last4s'];
     }
-
+    if (isset($options['emails'])) {
+        $param['emails']=$options['emails'];
+    }
+    if (isset($options['type'])) {
+        $param['type']=$options['type'];
+    }
     $smartSearch = new StripeQueryService(STRIPE_SK);
     $result = $smartSearch->smartSearch($param);
-
-    var_dump($result);
+    if(!empty($result)){
+        $smartSearch->toCsv($result);
+    }
 }else {
     echo "Error: Invalid command. Use --refund for refund, or --createProduct for product creation.\n";
     exit(1);

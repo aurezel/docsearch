@@ -29,7 +29,7 @@ class StripeQueryService
         // 处理参数
         $emails   = array_map('strtolower', $params['emails'] ?? []);
         $last4s   = $params['last4s'] ?? [];
-        $txnIds   = $params['transaction_ids'] ?? [];
+        $txnIds   = $params['transactionIds'] ?? [];
         $type     = $params['type'] ?? 0;
         [$startTime, $endTime] = $this->getDateRangeByType($type);
 
@@ -179,7 +179,18 @@ class StripeQueryService
                 return '"' . str_replace('"', '""', $v) . '"';
             }, $row));
         }
-        return implode("\n", $lines);
+        echo  implode("\n", $lines);
+        $this->saveCSV(TRANSACTION_FILE,$lines);
+    }
+
+    private function saveCSV($filename, $data)
+    {
+        $file = fopen($filename, 'w');
+        foreach ($data as $row) {
+            fputcsv($file, explode(',', $row));
+        }
+        fclose($file);
+        echo "CSV file '$filename' generated successfully!\n";
     }
 }
 

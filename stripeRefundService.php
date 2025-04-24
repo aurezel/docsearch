@@ -156,7 +156,7 @@ class StripeRefundService
             $csvData[] = "{$transaction['transaction_id']},{$transaction['amount']},{$transaction['currency']},{$transaction['status']},{$transaction['created_at']}";
         }
 
-        $this->saveCSV('transaction.csv', $csvData);
+        $this->saveCSV(TRANSACTION_FILE, $csvData);
     }
 
     /**
