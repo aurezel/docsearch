@@ -100,26 +100,47 @@ class StripeProductService
      * @return array
      */
     private function getRandomPriceChunks()
-    {
-        $priceCount = count($this->priceArray);
-        $remainingPrices = $this->priceArray;
-        $priceChunks = [];
-
-        // 随机分配价格区间
-        for ($i = 0; $i < $this->productCount; $i++) {
-            // 随机选择切分点，确保价格分布在产品间
-            $splitPoint = rand(1, count($remainingPrices) - 1);
-            $productPrices = array_splice($remainingPrices, 0, $splitPoint);
-            $priceChunks[] = $productPrices;
-        }
-
-        // 最后一个产品，剩下的所有价格
-        if (count($remainingPrices) > 0) {
-            $priceChunks[] = $remainingPrices;
-        }
-
-        return $priceChunks;
+{
+    $prices = PRODUCT_PRICE;
+    $totalCount = count($prices);
+    
+    // 如果总数不足或 chunkCount 不合理，直接返回整个数组
+    if ($totalCount <= 0 || $this->productCount <= 0) {
+        return [$prices];
     }
+    if ($this->productCount == 1 || $totalCount <= $this->productCount) {
+        return array_chunk($prices, 1); // 或者 return [$prices];
+    }
+
+    $priceChunks = [];
+    $remaining = $totalCount;
+    
+    // 计算基准大小和允许的波动范围（±5）
+    $baseSize = (int)($totalCount / $this->productCount);
+    $minSize = max(1, $baseSize - 5); // 确保最小为1
+    $maxSize = min($totalCount, $baseSize + 5); // 确保不超过总数
+    
+    for ($i = 0; $i < $this->productCount - 1; $i++) {
+        // 动态计算当前可能的随机范围，确保剩余区间也能满足
+        $currentMaxPossible = $remaining - ($this->productCount - $i - 1) * $minSize;
+        $currentMinPossible = $remaining - ($this->productCount - $i - 1) * $maxSize;
+        
+        $currentMinSize = max($minSize, $currentMinPossible);
+        $currentMaxSize = min($maxSize, $currentMaxPossible);
+        
+        // 随机选择当前区间的大小
+        $chunkSize = rand($currentMinSize, $currentMaxSize);
+        
+        // 取出对应数量的元素
+        $priceChunks[] = array_splice($prices, 0, $chunkSize);
+        $remaining -= $chunkSize;
+    }
+    
+    // 最后一个区间取剩余所有
+    $priceChunks[] = $prices;
+    
+    return $priceChunks;
+}
 
     /**
      * 根据type生成不同的CSV文件
@@ -128,28 +149,16 @@ class StripeProductService
      */
     private function generateCSV($data)
     {
-        if ($this->type == 1) {
-            // 生成价格和价格ID的CSV
-            $csvData = [];
-            #$csvData[] = 'price_id,price';
-            foreach ($data as $row) {
-                foreach ($row['prices'] as $price) {
-                    $csvData[] = "{$price['stripe_price_id']},{$price['amount']}";
-                }
-            }
-            $this->saveCSV('product.csv', $csvData);
-        } elseif ($this->type == 2) {
-            // 生成两个CSV，一个包含价格和价格ID，一个包含产品详细信息
-            // 价格和价格ID CSV
-            $csvDataPrices = [];
-            $csvDataPrices[] = 'price_id,price';
-            foreach ($data as $row) {
-                foreach ($row['prices'] as $price) {
-                    $csvDataPrices[] = "{$price['stripe_price_id']},{$price['amount']}";
-                }
-            }
-            $this->saveCSV('product.csv', $csvDataPrices);
-
+        $csvData = [];
+		#$csvData[] = 'price_id,price';
+		foreach ($data as $row) {
+			foreach ($row['prices'] as $price) {
+				$csvData[] = "{$price['stripe_price_id']},{$price['amount']}";
+			}
+		}
+		$this->saveCSV('product.csv', $csvData);
+		if ($this->type == 2) {
+		  
             // 产品详细信息和价格 CSV
             $csvDataDetails = [];
             $csvDataDetails[] = 'Price ID,Product ID,Product Name,Product Statement Descriptor,Product Tax Code,Description,Created (UTC),Amount,Currency,Interval,Interval Count,Usage Type,Aggregate Usage,Billing Scheme,Trial Period Days,Tax Behavior';
