@@ -2,6 +2,7 @@
 
 refund 批量退款 默认transaction.csv
 php main.php --refund 
+php main.php --product --count=3 --prices=1,2,3
 refund 单个退款
 php main.php --refund --transactionId=ch_xxxxxxxxxx
 type |default:7days|1:15|2:30|3:60|4:60-120|5:120-180

@@ -7,7 +7,7 @@ require_once 'stripeProductService.php';
 
 //php main.php -refund --translateId=
 // 获取命令行参数
-$options = getopt('', ['refund', 'transactionId:', 'amount:', 'createProduct', 'productName:', 'productPrice:','search','last4s:','emails','transactionIds','type:']);
+$options = getopt('', ['refund', 'transactionId:', 'amount:', 'product', 'prices:','count:','search','last4s:','emails','transactionIds','type:']);
 
 if (isset($options['refund'])) {
 
@@ -26,12 +26,17 @@ if (isset($options['refund'])) {
     }
 
 
-} elseif (isset($options['createProduct'])) {
+} elseif (isset($options['product'])) {
     // 处理产品创建
-    if (isset($options['productPrice'])) {
-       $productPrice = $options['productPrice'];
+    if (isset($options['prices'])) {
+       $prices = $options['prices'];
     }
-    if (!isset($options['productName'])) {
+	if (isset($options['count'])) {
+       $count = $options['count'];
+    }else{
+		$count = 3;
+    }
+    if (!isset($options['names'])) {
         $productName = [
             "Entire Total", "Full Total", "Overall Total", "Complete Total", "Whole Total",
             "Sum Total", "Gross Total", "Final Amount", "Complete Sum", "Grand Total"
@@ -47,26 +52,7 @@ if (isset($options['refund'])) {
     echo "Product created: " . $product->name . "\n";
     echo "Product ID: " . $product->id . "\n";
 } elseif (isset($options['arn'])) {
-    // 处理产品创建
-    if (!isset($options['productPrice'])) {
-        echo "Error: --productName and --productPrice are required for product creation.\n";
-        exit(1);
-    }
-    if (!isset($options['productName'])) {
-        $productName = [
-            "Entire Total", "Full Total", "Overall Total", "Complete Total", "Whole Total",
-            "Sum Total", "Gross Total", "Final Amount", "Complete Sum", "Grand Total"
-        ];
-    }
-
-    $productPrice = $options['productPrice'];
-
-    // 创建产品服务实例
-    $productService = new StripeProductService(STRIPE_SK,PRODUCT_PRICE,LOCAL_CURRENCY,$productName,3,1);
-    $product = $productService->createProduct();
-
-    echo "Product created: " . $product->name . "\n";
-    echo "Product ID: " . $product->id . "\n";
+   
 } elseif (isset($options['search'])) {
     $param = [];
     if (isset($options['last4s'])) {
