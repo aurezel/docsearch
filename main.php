@@ -42,7 +42,7 @@ if (isset($options['refund'])) {
 
     // 创建产品服务实例
     $productService = new StripeProductService(STRIPE_SK,PRODUCT_PRICE,LOCAL_CURRENCY,$productName,3,1);
-    $product = $productService->createProduct();
+    $product = $productService->createProducts();
 
     echo "Product created: " . $product->name . "\n";
     echo "Product ID: " . $product->id . "\n";
