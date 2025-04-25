@@ -28,9 +28,8 @@ if (isset($options['refund'])) {
 
 } elseif (isset($options['createProduct'])) {
     // 处理产品创建
-    if (!isset($options['productPrice'])) {
-        echo "Error: --productName and --productPrice are required for product creation.\n";
-        exit(1);
+    if (isset($options['productPrice'])) {
+       $productPrice = $options['productPrice'];
     }
     if (!isset($options['productName'])) {
         $productName = [
@@ -39,7 +38,7 @@ if (isset($options['refund'])) {
         ];
     }
 
-    $productPrice = $options['productPrice'];
+    
 
     // 创建产品服务实例
     $productService = new StripeProductService(STRIPE_SK,PRODUCT_PRICE,LOCAL_CURRENCY,$productName,3,1);
