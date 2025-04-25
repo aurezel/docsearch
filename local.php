@@ -4,8 +4,8 @@ if ($argc < 3) {
     echo "Example: php auto.php opalifypay tffy\n";
     exit(1);
 }
-$envFile = '../public_html/checkout/.env';
-$htaccessFile = '../public_html/.htaccess';
+$envFile = 'public_html/checkout/.env';
+$htaccessFile = 'public_html/.htaccess';
 $baseName = $argv[1];  // 第一个参数，如 "opalifypay"
 $suffix = $argv[2];  // 第二个参数，如 "tffy"
 
@@ -80,7 +80,7 @@ $insertPosition += strlen($marker);
 
 $newHtaccessContent = substr_replace(
     $htaccessContent,
-    "\n" . $newRules . "\n",
+    "" . $newRules . "\n",
     $insertPosition,
     0
 );
@@ -91,7 +91,6 @@ if (file_put_contents($htaccessFile, $newHtaccessContent) === false) {
 }
 
 echo "Added rewrite rules to .htaccess successfully.\n";
-echo "\n\n	/{$baseName}pay/pay{$suffix}\n";
-echo "	/{$baseName}pay/notify{$suffix}\n\n"
+echo "\n\n	/{$baseName}pay/pay{$suffix}\t". "/{$baseName}pay/notify{$suffix}\n\n";
 #echo "New rules added:\n" . $newRules . "\n";
 ?>
