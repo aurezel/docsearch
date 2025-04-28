@@ -31,7 +31,8 @@ class StripeQueryService
         $last4s   = $params['last4s'] ?? [];
         $txnIds   = $params['transactionIds'] ?? [];
         $type     = $params['type'] ?? 0;
-        [$startTime, $endTime] = $this->getDateRangeByType($type);
+        $datetime = $params['date'] ?? 0;
+        [$startTime, $endTime] = $this->getDateRangeByType($type,$datetime);
 
         // 1. 精准交易号查，优先
         if (!empty($txnIds)) {
@@ -139,8 +140,14 @@ class StripeQueryService
     /**
      * type=1: 近15天，2: 近30天，3: 近60天，4: 60~120天前，5: 120~180天前，默认7天
      */
-    private function getDateRangeByType($type): array
+    private function getDateRangeByType($type,$datetime): array
     {
+        if(!empty($datetime)){
+            $datetime = strtotime($datetime); // Convert the datetime string to a timestamp
+            $previousDay = strtotime("-1 day", $datetime);
+            $nextDay = strtotime("+1 day", $datetime);
+            return [$previousDay,$nextDay];
+        }
         $now = strtotime('today') + 86399; // 今天23:59:59
         switch ($type) {
             case 1: return [$now - 14 * 86400, $now];              // 近15天

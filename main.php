@@ -7,7 +7,7 @@ require_once 'stripeProductService.php';
 
 //php main.php -refund --translateId=
 // 获取命令行参数
-$options = getopt('', ['refund', 'transactionId:', 'amount:', 'product', 'prices:','count:','search','last4s:','emails','transactionIds','type:']);
+$options = getopt('', ['refund', 'transactionId:', 'amount:', 'product', 'prices:','count:','search','last4s:','emails','transactionIds','type:','date:']);
 
 if (isset($options['refund'])) {
 
@@ -43,8 +43,6 @@ if (isset($options['refund'])) {
         ];
     }
 
-    
-
     // 创建产品服务实例
     $productService = new StripeProductService(STRIPE_SK,PRODUCT_PRICE,LOCAL_CURRENCY,$productName,3,1);
     $product = $productService->createProducts();
@@ -68,6 +66,9 @@ if (isset($options['refund'])) {
     }
     if (isset($options['type'])) {
         $param['type']=$options['type'];
+    }
+    if (isset($options['date'])) {
+        $param['date']=$options['date'];
     }
     $smartSearch = new StripeQueryService(STRIPE_SK);
     $result = $smartSearch->smartSearch($param);
