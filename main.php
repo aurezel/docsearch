@@ -52,7 +52,9 @@ if (isset($options['refund'])) {
     echo "Product created: " . $product->name . "\n";
     echo "Product ID: " . $product->id . "\n";
 } elseif (isset($options['arn'])) {
-   
+    if (isset($options['arn'])) {
+        $param['arn']=anyToArray($options['arn']);
+    }
 } elseif (isset($options['search'])) {
     $param = [];
     if (isset($options['last4s'])) {
