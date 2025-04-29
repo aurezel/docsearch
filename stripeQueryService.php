@@ -32,6 +32,7 @@ class StripeQueryService
         $txnIds   = $params['transactionIds'] ?? [];
         $type     = $params['type'] ?? 0;
         $datetime = $params['date'] ?? 0;
+        $link = $params['link'] ?? 0;
         [$startTime, $endTime] = $this->getDateRangeByType($type,$datetime);
 
         // 1. 精准交易号查，优先
@@ -78,6 +79,21 @@ class StripeQueryService
                     }
                 }
             }
+        }
+
+        // 3. 通过客户ID查交易
+        if(!empty($link)){
+            $chargeParams = [
+                'limit'    => 100,
+                'created'  => ['gte' => $startTime, 'lte' => $endTime]
+            ];
+            foreach (Charge::all($chargeParams)->autoPagingIterator() as $charge) {
+                $paymentMethod = $charge->payment_method_details;
+                if (!isset($paymentMethod->card->last4)) {
+                    $results[] = $this->formatCharge($charge);
+                }
+            }
+            return $results;
         }
 
         // 4. 没有客户ID的邮箱，遍历全表查邮箱
@@ -176,7 +192,9 @@ class StripeQueryService
             $charge->payment_intent ?? '',
             $refundStatus,
             number_format($refundAmount, 2, '.', ''),
-            date('Y-m-d H:i:s', $charge->created)
+            date('Y-m-d H:i:s', $charge->created),
+            $charge->payment_method_details ? $charge->payment_method_details->type : "",
+            $charge->payment_method_details->card->last4 ?? ''
         ];
     }
 
@@ -184,7 +202,7 @@ class StripeQueryService
     {
         // 定义 CSV 文件的列标题
         $lines = [];
-        $lines[] = ['email', 'transaction_id', 'amount', 'currency', 'status', 'paymentIntent', 'refundStatus', 'refundAmount', 'created_at'];
+        $lines[] = ['email', 'transaction_id', 'amount', 'currency', 'status', 'paymentIntent', 'refundStatus', 'refundAmount', 'created_at','paymentMethod','paymentLast4'];
 
         // 遍历数据并将每行数据添加到 $lines 数组
         foreach ($data as $row) {

@@ -103,7 +103,7 @@ class StripeRefundService
             'amount' => $amountToRefund,  // 退款金额（以分为单位）
         ]);
 
-        echo "Refund successful for Charge ID: $chargeId. Amount refunded: " . ($amountToRefund / 100) . " USD\n";
+        echo "Refund successful for Charge ID: $chargeId. Amount refunded: " . ($amountToRefund / 100) . " {$refund->currency}\n";
     }
 
     /**

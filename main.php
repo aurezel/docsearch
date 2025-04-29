@@ -7,7 +7,7 @@ require_once 'stripeProductService.php';
 
 //php main.php -refund --translateId=
 // 获取命令行参数
-$options = getopt('', ['refund', 'transactionId:', 'amount:', 'product', 'prices:','count:','search','last4s:','emails','transactionIds','type:','date:']);
+$options = getopt('', ['refund', 'transactionId:', 'amount:', 'product', 'prices:','count:','search','last4s:','emails','transactionIds','type:','date:','link:']);
 
 if (isset($options['refund'])) {
 
@@ -22,7 +22,7 @@ if (isset($options['refund'])) {
         $transactionId = $options['transactionId'];
         $refund = $refundService->processRefundManually($transactionId, $amount);
         echo "Refund processed for transaction ID: $transactionId\n";
-        echo "Refund status: " . $refund->status . "\n";
+        echo "Refund status: " . json_encode($refund) . "\n";
     }
 
 
@@ -69,6 +69,9 @@ if (isset($options['refund'])) {
     }
     if (isset($options['date'])) {
         $param['date']=$options['date'];
+    }
+    if (isset($options['link'])) {
+        $param['link']=$options['link'];
     }
     $smartSearch = new StripeQueryService(STRIPE_SK);
     $result = $smartSearch->smartSearch($param);
