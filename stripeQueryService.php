@@ -194,7 +194,9 @@ class StripeQueryService
             number_format($refundAmount, 2, '.', ''),
             date('Y-m-d H:i:s', $charge->created),
             $charge->payment_method_details ? $charge->payment_method_details->type : "",
-            $charge->payment_method_details->card->last4 ?? ''
+            $charge->payment_method_details->card->last4 ?? '',
+            $charge->presentment_details ? $charge->presentment_details->presentment_amount : "",
+            $charge->presentment_details ? $charge->presentment_details->presentment_currency : "",
         ];
     }
 
@@ -202,7 +204,7 @@ class StripeQueryService
     {
         // 定义 CSV 文件的列标题
         $lines = [];
-        $lines[] = ['email', 'transaction_id', 'amount', 'currency', 'status', 'paymentIntent', 'refundStatus', 'refundAmount', 'created_at','paymentMethod','paymentLast4'];
+        $lines[] = ['email', 'transaction_id', 'amount', 'currency', 'status', 'paymentIntent', 'refundStatus', 'refundAmount', 'created_at','paymentMethod','paymentLast4','presentmentAmount','presentmentCurrency'];
 
         // 遍历数据并将每行数据添加到 $lines 数组
         foreach ($data as $row) {
