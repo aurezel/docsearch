@@ -40,9 +40,7 @@ class StripeQueryService
             foreach ($txnIds as $txnId) {
                 try {
                     $charge = Charge::retrieve($txnId);
-                    if ($this->chargeMatch($charge, $emails, $last4s, $startTime, $endTime)) {
-                        $results[] = $this->formatCharge($charge);
-                    }
+                    $results[] = $this->formatCharge($charge);
                 } catch (\Exception $e) {
                     // 交易号查不到/不存在时跳过
                 }
