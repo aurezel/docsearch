@@ -73,9 +73,13 @@ class StripeRefundService
             if (strpos($transactionId, 'ch_') === 0) {
                 // Charge ID，直接退款
                 $this->refundCharge($transactionId, $partialAmount);
-            } elseif (strpos($transactionId, 'py_') === 0) {
+            } elseif (strpos($transactionId, 'pi_') === 0) {
                 // PaymentIntent ID，先获取Charge ID，然后退款
                 $this->refundPaymentIntent($transactionId, $partialAmount);
+            }elseif (strpos($transactionId, 'py_') === 0) {
+                $payment = \Stripe\Payment::retrieve($transactionId);
+				$paymentIntentId = $payment->payment_intent;
+                $this->refundPaymentIntent($paymentIntentId, $partialAmount);
             } else {
                 echo "Invalid transaction ID: $transactionId. Must start with 'ch_' or 'py_'.\n";
             }
