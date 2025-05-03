@@ -65,7 +65,7 @@ if (isset($options['refund'])) {
         $param['arn']=anyToArray($options['arn']);
     }
     if (isset($options['all'])) {
-        $param['arn']=true;
+        $param['all']=true;
     }
     if (isset($options['transIds'])) {
         $param['transactionIds']=anyToArray($options['transIds']);
