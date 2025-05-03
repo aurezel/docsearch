@@ -105,7 +105,7 @@ class StripeQueryService
             foreach (Charge::all($chargeParams)->autoPagingIterator() as $charge) {
                 $email = strtolower($charge->billing_details->email ?? $charge->receipt_email ?? '');
                 $matchLast4 = isset($last4Set[$charge->payment_method_details->card->last4 ?? '']);
-                $matchEmail = isset($last4Set[$charge->payment_method_details->card->last4 ?? '']);
+                $matchEmail = isset($emailSet[$email]);
                 if (($matchEmail || $matchLast4)) {
                     $results[] = $this->formatCharge($charge);
                 }
