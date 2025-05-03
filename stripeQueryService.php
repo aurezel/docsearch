@@ -108,6 +108,7 @@ class StripeQueryService
 					$balanceTransaction = \Stripe\BalanceTransaction::retrieve($balanceTransactionId); 
 					// 检查并获取 ARN
 					$arnStr = $balanceTransaction->source->transfer_data->arn ?? null;
+					var_dump($arnStr);
 					if ($arnStr && in_array($arnStr, $arn)) {
 						$results[] = $this->formatCharge($charge,$arnStr);
 					}
