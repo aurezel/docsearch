@@ -33,6 +33,7 @@ class StripeQueryService
         $type     = $params['type'] ?? 0;
         $datetime = $params['date'] ?? 0;
         $link = $params['link'] ?? 0;
+        $arn = $params['arn'] ?? 0;
         [$startTime, $endTime] = $this->getDateRangeByType($type,$datetime);
 
         // 1. 精准交易号查，优先
@@ -91,6 +92,29 @@ class StripeQueryService
                     $results[] = $this->formatCharge($charge);
                 }
             }
+            return $results;
+        }
+
+		// 4. 通过客户ID查交易
+        if(!empty($arn)){
+            $chargeParams = [
+                'limit'    => 100,
+                'created'  => ['gte' => $startTime, 'lte' => $endTime]
+            ];
+            foreach (Charge::all($chargeParams)->autoPagingIterator() as $charge) {
+				if($charge->status == 'succeeded'){
+					$balanceTransactionId = $charge->balance_transaction; 
+					// 获取 BalanceTransaction 对象
+					$balanceTransaction = \Stripe\BalanceTransaction::retrieve($balanceTransactionId); 
+					// 检查并获取 ARN
+					$arnStr = $balanceTransaction->source->transfer_data->arn ?? null;
+					if ($arnStr && in_array($arnStr, $arn)) {
+						$results[] = $this->formatCharge($charge,$arnStr);
+					}
+				}
+                
+            }
+			var_dump($results);
             return $results;
         }
 
@@ -173,7 +197,7 @@ class StripeQueryService
         }
     }
 
-    private function formatCharge($charge,$type=0)
+    private function formatCharge($charge)
     {
         $refundStatus = 'none';
         $refundAmount = 0;
@@ -182,16 +206,14 @@ class StripeQueryService
             $refundStatus = ($refundAmount == ($charge->amount / 100)) ? 'fully_refunded' : 'partially_refunded';
         }
 		$arnStr = "";
-		if($type){
-			if (!empty($charge->destination_payment)) {
-				$destinationCharge = \Stripe\Charge::retrieve($charge->destination_payment);
-				$arnStr = $destinationCharge->transfer_data->arn ?? null;
-			}
+		if (!empty($charge->destination_payment)) {
+			$destinationCharge = \Stripe\Charge::retrieve($charge->destination_payment);
+			$arnStr = $destinationCharge->transfer_data->arn ?? null;
+		}
 
-			if (!empty($charge->balance_transaction) && empty($arnStr)) {
-				$txn = \Stripe\BalanceTransaction::retrieve($charge->balance_transaction);
-				$arnStr = $txn->source->transfer_data->arn ?? null;
-			}
+		if (!empty($charge->balance_transaction) && empty($arnStr)) {
+			$txn = \Stripe\BalanceTransaction::retrieve($charge->balance_transaction);
+			$arnStr = $txn->source->transfer_data->arn ?? null;
 		}
 		
         return [
@@ -205,7 +227,7 @@ class StripeQueryService
             number_format($refundAmount, 2, '.', ''),
             date('Y-m-d H:i:s', $charge->created),
             isset($charge->payment_method_details) ? $charge->payment_method_details->type : "",
-            isset($charge->payment_method_details) ? $charge->payment_method_details->card->last4 ?? '',
+            isset($charge->payment_method_details) ? $charge->payment_method_details->card->last4 ?? '':'',
             isset($charge->presentment_details) ? $charge->presentment_details->presentment_amount : "",
             isset($charge->presentment_details) ? $charge->presentment_details->presentment_currency : "",
 			$arnStr,
