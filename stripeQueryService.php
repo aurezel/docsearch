@@ -124,8 +124,9 @@ class StripeQueryService
 							// ARN 存储在 source_transfer 中
 							if (isset($balanceTransaction->source_transfer->id)) {
 								$arn = $balanceTransaction->source_transfer->id;
-								$results[] = $this->formatCharge($charge,$arn);
-								echo "✅ ARN: $arn\n";
+								$statementDescriptor = $charge->statement_descriptor;
+								$results[] = $this->formatCharge($charge,$arn."|".$statementDescriptor);
+								echo "✅ ARN: $arn - {$statementDescriptor}\n";
 							} else {
 								echo "❌ 找不到 ARN\n";
 							}
