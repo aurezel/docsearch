@@ -32,7 +32,8 @@ class StripeQueryService
         $last4s   = $params['last4s'] ?? [];
         $txnIds   = $params['transactionIds'] ?? [];
         $type     = $params['type'] ?? 0;
-        $datetime = $params['date'] ?? 0;
+        $sdate = $params['sdate'] ?? 0;
+        $edate = $params['edate'] ?? 0;
         $link = $params['link'] ?? 0;
         $arn = $params['arn'] ?? 0;
         $all = $params['all'] ?? false;
@@ -191,14 +192,19 @@ class StripeQueryService
     /**
      * type=1: 近15天，2: 近30天，3: 近60天，4: 60~120天前，5: 120~180天前，默认7天
      */
-    private function getDateRangeByType($type,$datetime): array
-    {
-        if(!empty($datetime)){
-            $datetime = strtotime($datetime); // Convert the datetime string to a timestamp
-            $previousDay = strtotime("-1 day", $datetime);
-            $nextDay = strtotime("+1 day", $datetime);
-            return [$previousDay,$nextDay];
-        }
+    private function getDateRangeByType($type,$startdate=0,$enddate=0): array
+    {	
+		if ($startdate && $enddate) {
+			return [strtotime($startdate), strtotime($enddate) + 86400];
+		}
+
+		// 如果传递了datetime（假设是一个日期字符串）
+		if ($startdate) {
+			$datetime = strtotime($startdate); // Convert the datetime string to a timestamp
+			$previousDay = strtotime("-1 day", $datetime);
+			$nextDay = strtotime("+1 day", $datetime) + 86400;
+			return [$previousDay, $nextDay];
+		}
         $now = strtotime('today') + 86399; // 今天23:59:59
         switch ($type) {
             case 1: return [$now - 14 * 86400, $now];              // 近15天
