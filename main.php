@@ -49,7 +49,7 @@ if (isset($options['refund'])) {
 
     echo "Product created: " . $product->name . "\n";
     echo "Product ID: " . $product->id . "\n";
-} elseif (isset($options['arn'])) {
+} elseif (isset($options['arnList'])) {
     if (isset($options['arn'])) {
         $param['arn']=anyToArray($options['arn']);
     }
@@ -80,6 +80,8 @@ if (isset($options['refund'])) {
     $result = $smartSearch->smartSearch($param);
     if(!empty($result)){
         $smartSearch->toCsv($result);
+    }else{
+		echo "It's nothing in the search\n";
     }
 }else {
     echo "Error: Invalid command. Use --refund for refund, or --createProduct for product creation.\n";

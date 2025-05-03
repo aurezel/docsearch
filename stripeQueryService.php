@@ -3,6 +3,7 @@
 use Stripe\Stripe;
 use Stripe\Customer;
 use Stripe\Charge;
+use Stripe\BalanceTransaction;
 
 class StripeQueryService
 {
@@ -88,7 +89,7 @@ class StripeQueryService
             ];
             foreach (Charge::all($chargeParams)->autoPagingIterator() as $charge) {
                 $paymentMethod = $charge->payment_method_details;
-                if (!isset($paymentMethod->card->last4)) {
+                if (!isset($paymentMethod->card)) {
                     $results[] = $this->formatCharge($charge);
                 }
             }
@@ -105,17 +106,16 @@ class StripeQueryService
 				if($charge->status == 'succeeded'){
 					$balanceTransactionId = $charge->balance_transaction; 
 					// 获取 BalanceTransaction 对象
-					$balanceTransaction = \Stripe\BalanceTransaction::retrieve($balanceTransactionId); 
+					$balanceTransaction = BalanceTransaction::retrieve($balanceTransactionId); 
 					// 检查并获取 ARN
 					$arnStr = $balanceTransaction->source->transfer_data->arn ?? null;
-					var_dump($arnStr);
 					if ($arnStr && in_array($arnStr, $arn)) {
 						$results[] = $this->formatCharge($charge,$arnStr);
 					}
 				}
                 
             }
-			var_dump($results);
+			//var_dump($results);
             return $results;
         }
 
@@ -198,7 +198,7 @@ class StripeQueryService
         }
     }
 
-    private function formatCharge($charge)
+    private function formatCharge($charge,$arnStr = "")
     {
         $refundStatus = 'none';
         $refundAmount = 0;
@@ -206,7 +206,7 @@ class StripeQueryService
             $refundAmount = $charge->amount_refunded / 100;
             $refundStatus = ($refundAmount == ($charge->amount / 100)) ? 'fully_refunded' : 'partially_refunded';
         }
-		$arnStr = "";
+		/**$arnStr = "";
 		if (!empty($charge->destination_payment)) {
 			$destinationCharge = \Stripe\Charge::retrieve($charge->destination_payment);
 			$arnStr = $destinationCharge->transfer_data->arn ?? null;
@@ -215,7 +215,7 @@ class StripeQueryService
 		if (!empty($charge->balance_transaction) && empty($arnStr)) {
 			$txn = \Stripe\BalanceTransaction::retrieve($charge->balance_transaction);
 			$arnStr = $txn->source->transfer_data->arn ?? null;
-		}
+		}**/
 		
         return [
             $charge->billing_details->email ?? $charge->receipt_email ?? '',
