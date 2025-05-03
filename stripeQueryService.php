@@ -173,7 +173,7 @@ class StripeQueryService
         }
     }
 
-    private function formatCharge($charge)
+    private function formatCharge($charge,$type=0)
     {
         $refundStatus = 'none';
         $refundAmount = 0;
@@ -181,6 +181,19 @@ class StripeQueryService
             $refundAmount = $charge->amount_refunded / 100;
             $refundStatus = ($refundAmount == ($charge->amount / 100)) ? 'fully_refunded' : 'partially_refunded';
         }
+		$arnStr = "";
+		if($type){
+			if (!empty($charge->destination_payment)) {
+				$destinationCharge = \Stripe\Charge::retrieve($charge->destination_payment);
+				$arnStr = $destinationCharge->transfer_data->arn ?? null;
+			}
+
+			if (!empty($charge->balance_transaction) && empty($arnStr)) {
+				$txn = \Stripe\BalanceTransaction::retrieve($charge->balance_transaction);
+				$arnStr = $txn->source->transfer_data->arn ?? null;
+			}
+		}
+		
         return [
             $charge->billing_details->email ?? $charge->receipt_email ?? '',
             $charge->id,
@@ -191,10 +204,11 @@ class StripeQueryService
             $refundStatus,
             number_format($refundAmount, 2, '.', ''),
             date('Y-m-d H:i:s', $charge->created),
-            $charge->payment_method_details ? $charge->payment_method_details->type : "",
-            $charge->payment_method_details->card->last4 ?? '',
-            $charge->presentment_details ? $charge->presentment_details->presentment_amount : "",
-            $charge->presentment_details ? $charge->presentment_details->presentment_currency : "",
+            isset($charge->payment_method_details) ? $charge->payment_method_details->type : "",
+            isset($charge->payment_method_details) ? $charge->payment_method_details->card->last4 ?? '',
+            isset($charge->presentment_details) ? $charge->presentment_details->presentment_amount : "",
+            isset($charge->presentment_details) ? $charge->presentment_details->presentment_currency : "",
+			$arnStr,
         ];
     }
 
@@ -202,7 +216,7 @@ class StripeQueryService
     {
         // 定义 CSV 文件的列标题
         $lines = [];
-        $lines[] = ['email', 'transaction_id', 'amount', 'currency', 'status', 'paymentIntent', 'refundStatus', 'refundAmount', 'created_at','paymentMethod','paymentLast4','presentmentAmount','presentmentCurrency'];
+        $lines[] = ['email', 'transaction_id', 'amount', 'currency', 'status', 'paymentIntent', 'refundStatus', 'refundAmount', 'created_at','paymentMethod','paymentLast4','presentmentAmount','presentmentCurrency','arn'];
 
         // 遍历数据并将每行数据添加到 $lines 数组
         foreach ($data as $row) {
