@@ -35,6 +35,7 @@ class StripeQueryService
         $datetime = $params['date'] ?? 0;
         $link = $params['link'] ?? 0;
         $arn = $params['arn'] ?? 0;
+        $all = $params['all'] ?? false;
         [$startTime, $endTime] = $this->getDateRangeByType($type,$datetime);
 
         // 1. 精准交易号查，优先
@@ -92,6 +93,17 @@ class StripeQueryService
                 if (!isset($paymentMethod->card)) {
                     $results[] = $this->formatCharge($charge);
                 }
+            }
+            return $results;
+        }
+		if($all){
+            $chargeParams = [
+                'limit'    => 100,
+                'created'  => ['gte' => $startTime, 'lte' => $endTime]
+            ];
+            foreach (Charge::all($chargeParams)->autoPagingIterator() as $charge) {
+                $paymentMethod = $charge->payment_method_details;
+                $results[] = $this->formatCharge($charge);
             }
             return $results;
         }
