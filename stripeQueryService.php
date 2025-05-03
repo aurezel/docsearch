@@ -35,7 +35,7 @@ class StripeQueryService
         $sdate = $params['sdate'] ?? 0;
         $edate = $params['edate'] ?? 0;
         $link = $params['link'] ?? 0;
-        $arn = $params['arn'] ?? 0;
+        $arn = $params['arn'] ?? false;
         $all = $params['all'] ?? false;
         [$startTime, $endTime] = $this->getDateRangeByType($type,$sdate,$edate);
 
@@ -110,7 +110,7 @@ class StripeQueryService
         }
 
 		// 4. 通过客户ID查交易
-        if(!empty($arn)){
+        if($arn){
             $chargeParams = [
                 'limit'    => 100,
                 'created'  => ['gte' => $startTime, 'lte' => $endTime]

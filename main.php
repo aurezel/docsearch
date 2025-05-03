@@ -62,7 +62,7 @@ if (isset($options['refund'])) {
         $param['emails']=anyToArray($options['emails']);
     }
     if (isset($options['arn'])) {
-        $param['arn']=anyToArray($options['arn']);
+        $param['arn']=true;//anyToArray($options['arn']);
     }
     if (isset($options['all'])) {
         $param['all']=true;
