@@ -37,7 +37,7 @@ class StripeQueryService
         $link = $params['link'] ?? 0;
         $arn = $params['arn'] ?? 0;
         $all = $params['all'] ?? false;
-        [$startTime, $endTime] = $this->getDateRangeByType($type,$datetime);
+        [$startTime, $endTime] = $this->getDateRangeByType($type,$sdate,$edate);
 
         // 1. 精准交易号查，优先
         if (!empty($txnIds)) {
@@ -116,16 +116,23 @@ class StripeQueryService
                 'created'  => ['gte' => $startTime, 'lte' => $endTime]
             ];
             foreach (Charge::all($chargeParams)->autoPagingIterator() as $charge) {
-				if($charge->status == 'succeeded'){
-					$balanceTransactionId = $charge->balance_transaction; 
-					// 获取 BalanceTransaction 对象
-					$balanceTransaction = BalanceTransaction::retrieve($balanceTransactionId); 
-					// 检查并获取 ARN
-					$arnStr = $balanceTransaction->source->transfer_data->arn ?? null;
-					if ($arnStr && in_array($arnStr, $arn)) {
-						$results[] = $this->formatCharge($charge,$arnStr);
+				if (!empty($charge->refunds->data)) {
+					foreach ($charge->refunds->data as $refund) {
+						if ($refund->status === 'succeeded') {
+							$balanceTransaction = \Stripe\BalanceTransaction::retrieve($refund->balance_transaction);
+                    
+							// ARN 存储在 source_transfer 中
+							if (isset($balanceTransaction->source_transfer->id)) {
+								$arn = $balanceTransaction->source_transfer->id;
+								$results[] = $this->formatCharge($charge,$arn);
+								echo "✅ ARN: $arn\n";
+							} else {
+								echo "❌ 找不到 ARN\n";
+							}
+						}
 					}
 				}
+				 
                 
             }
 			//var_dump($results);
