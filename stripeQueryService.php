@@ -32,7 +32,7 @@ class StripeQueryService
         $last4s   = $params['last4s'] ?? [];
         $txnIds   = $params['transactionIds'] ?? [];
         $type     = $params['type'] ?? 0;
-        $sdate = $params['sdate'] ?? 0;
+        $sdate = $params['date'] ?? 0;
         $edate = $params['edate'] ?? 0;
         $link = $params['link'] ?? 0;
         $arn = $params['arn'] ?? false;
