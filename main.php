@@ -7,7 +7,7 @@ require_once 'stripeProductService.php';
 
 //php main.php -refund --translateId=
 // 获取命令行参数
-$options = getopt('', ['refund', 'transactionId:', 'amount:', 'product', 'prices:','count:','search','last4s:','emails:','transIds:','type:','date:','link:']);
+$options = getopt('', ['refund', 'transactionId:', 'amount:', 'product', 'prices:','count:','search','last4s:','emails:','transIds:','type:','sdate:','edate:','link:','arn:','all']);
 
 if (isset($options['refund'])) {
 
@@ -49,7 +49,7 @@ if (isset($options['refund'])) {
 
     echo "Product created: " . $product->name . "\n";
     echo "Product ID: " . $product->id . "\n";
-} elseif (isset($options['arn'])) {
+} elseif (isset($options['arnList'])) {
     if (isset($options['arn'])) {
         $param['arn']=anyToArray($options['arn']);
     }
@@ -61,14 +61,23 @@ if (isset($options['refund'])) {
     if (isset($options['emails'])) {
         $param['emails']=anyToArray($options['emails']);
     }
+    if (isset($options['arn'])) {
+        $param['arn']=true;//anyToArray($options['arn']);
+    }
+    if (isset($options['all'])) {
+        $param['all']=true;
+    }
     if (isset($options['transIds'])) {
         $param['transactionIds']=anyToArray($options['transIds']);
     }
     if (isset($options['type'])) {
         $param['type']=$options['type'];
     }
-    if (isset($options['date'])) {
-        $param['date']=$options['date'];
+    if (isset($options['sdate'])) {
+        $param['sdate']=$options['sdate'];
+    }
+    if (isset($options['edate'])) {
+        $param['edate']=$options['edate'];
     }
     if (isset($options['link'])) {
         $param['link']=$options['link'];
@@ -77,6 +86,8 @@ if (isset($options['refund'])) {
     $result = $smartSearch->smartSearch($param);
     if(!empty($result)){
         $smartSearch->toCsv($result);
+    }else{
+		echo "It's nothing in the search\n";
     }
 }else {
     echo "Error: Invalid command. Use --refund for refund, or --createProduct for product creation.\n";

@@ -4,6 +4,7 @@ use Stripe\Stripe;
 use Stripe\Charge;
 use Stripe\PaymentIntent;
 use Stripe\Refund;
+use Stripe\Payment;
 
 class StripeRefundService
 {
@@ -73,9 +74,16 @@ class StripeRefundService
             if (strpos($transactionId, 'ch_') === 0) {
                 // Charge ID，直接退款
                 $this->refundCharge($transactionId, $partialAmount);
-            } elseif (strpos($transactionId, 'py_') === 0) {
+            } elseif (strpos($transactionId, 'pi_') === 0) {
                 // PaymentIntent ID，先获取Charge ID，然后退款
                 $this->refundPaymentIntent($transactionId, $partialAmount);
+            }elseif (strpos($transactionId, 'py_') === 0) {
+				 $payment = Payment::retrieve($transaction_id);
+				if (!empty($payment->payment_intent)) {
+					$paymentIntentId = $payment->payment_intent;
+					$this->refundPaymentIntent($paymentIntentId, $partialAmount);
+				}
+                 
             } else {
                 echo "Invalid transaction ID: $transactionId. Must start with 'ch_' or 'py_'.\n";
             }
@@ -112,20 +120,12 @@ class StripeRefundService
      * @param float|null $partialAmount 部分退款金额（可选）
      */
     private function refundPaymentIntent($paymentIntentId, $partialAmount = null)
-    {
-        // 获取PaymentIntent对象
-        $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
-
-        // 获取关联的Charge ID
-        $chargeId = $paymentIntent->charges->data[0]->id;
-
-        // 全额退款或部分退款
-        $charge = Charge::retrieve($chargeId);
+    { 
         $amountToRefund = $partialAmount ? min($charge->amount, $partialAmount * 100) : $charge->amount;
 
         // 创建退款
         $refund = Refund::create([
-            'charge' => $chargeId,
+            'payment_intent' => $paymentIntentId,
             'amount' => $amountToRefund,  // 退款金额（以分为单位）
         ]);
 

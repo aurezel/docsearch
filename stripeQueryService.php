@@ -3,6 +3,7 @@
 use Stripe\Stripe;
 use Stripe\Customer;
 use Stripe\Charge;
+use Stripe\BalanceTransaction;
 
 class StripeQueryService
 {
@@ -31,9 +32,12 @@ class StripeQueryService
         $last4s   = $params['last4s'] ?? [];
         $txnIds   = $params['transactionIds'] ?? [];
         $type     = $params['type'] ?? 0;
-        $datetime = $params['date'] ?? 0;
+        $sdate = $params['sdate'] ?? 0;
+        $edate = $params['edate'] ?? 0;
         $link = $params['link'] ?? 0;
-        [$startTime, $endTime] = $this->getDateRangeByType($type,$datetime);
+        $arn = $params['arn'] ?? false;
+        $all = $params['all'] ?? false;
+        [$startTime, $endTime] = $this->getDateRangeByType($type,$sdate,$edate);
 
         // 1. 精准交易号查，优先
         if (!empty($txnIds)) {
@@ -87,10 +91,52 @@ class StripeQueryService
             ];
             foreach (Charge::all($chargeParams)->autoPagingIterator() as $charge) {
                 $paymentMethod = $charge->payment_method_details;
-                if (!isset($paymentMethod->card->last4)) {
+                if (!isset($paymentMethod->card)) {
                     $results[] = $this->formatCharge($charge);
                 }
             }
+            return $results;
+        }
+		if($all){
+            $chargeParams = [
+                'limit'    => 100,
+                'created'  => ['gte' => $startTime, 'lte' => $endTime]
+            ];
+            foreach (Charge::all($chargeParams)->autoPagingIterator() as $charge) {
+                $paymentMethod = $charge->payment_method_details;
+                $results[] = $this->formatCharge($charge);
+            }
+            return $results;
+        }
+
+		// 4. 通过客户ID查交易
+        if($arn){
+            $chargeParams = [
+                'limit'    => 100,
+                'created'  => ['gte' => $startTime, 'lte' => $endTime]
+            ];
+            foreach (Charge::all($chargeParams)->autoPagingIterator() as $charge) {
+				if (!empty($charge->refunds->data)) {
+					foreach ($charge->refunds->data as $refund) {
+						if ($refund->status === 'succeeded') {
+							$balanceTransaction = \Stripe\BalanceTransaction::retrieve($refund->balance_transaction);
+                    
+							// ARN 存储在 source_transfer 中
+							if (isset($balanceTransaction->source_transfer->id)) {
+								$arn = $balanceTransaction->source_transfer->id;
+								$statementDescriptor = $charge->statement_descriptor;
+								$results[] = $this->formatCharge($charge,$arn."|".$statementDescriptor);
+								echo "✅ ARN: $arn - {$statementDescriptor}\n";
+							} else {
+								echo "❌ 找不到 ARN\n";
+							}
+						}
+					}
+				}
+				 
+                
+            }
+			//var_dump($results);
             return $results;
         }
 
@@ -105,7 +151,7 @@ class StripeQueryService
             foreach (Charge::all($chargeParams)->autoPagingIterator() as $charge) {
                 $email = strtolower($charge->billing_details->email ?? $charge->receipt_email ?? '');
                 $matchLast4 = isset($last4Set[$charge->payment_method_details->card->last4 ?? '']);
-                $matchEmail = isset($last4Set[$charge->payment_method_details->card->last4 ?? '']);
+                $matchEmail = isset($emailSet[$email]);
                 if (($matchEmail || $matchLast4)) {
                     $results[] = $this->formatCharge($charge);
                 }
@@ -154,14 +200,19 @@ class StripeQueryService
     /**
      * type=1: 近15天，2: 近30天，3: 近60天，4: 60~120天前，5: 120~180天前，默认7天
      */
-    private function getDateRangeByType($type,$datetime): array
-    {
-        if(!empty($datetime)){
-            $datetime = strtotime($datetime); // Convert the datetime string to a timestamp
-            $previousDay = strtotime("-1 day", $datetime);
-            $nextDay = strtotime("+1 day", $datetime);
-            return [$previousDay,$nextDay];
-        }
+    private function getDateRangeByType($type,$startdate=0,$enddate=0): array
+    {	
+		if ($startdate && $enddate) {
+			return [strtotime($startdate), strtotime($enddate) + 86400];
+		}
+
+		// 如果传递了datetime（假设是一个日期字符串）
+		if ($startdate) {
+			$datetime = strtotime($startdate); // Convert the datetime string to a timestamp
+			$previousDay = strtotime("-1 day", $datetime);
+			$nextDay = strtotime("+1 day", $datetime) + 86400;
+			return [$previousDay, $nextDay];
+		}
         $now = strtotime('today') + 86399; // 今天23:59:59
         switch ($type) {
             case 1: return [$now - 14 * 86400, $now];              // 近15天
@@ -173,7 +224,7 @@ class StripeQueryService
         }
     }
 
-    private function formatCharge($charge)
+    private function formatCharge($charge,$arnStr = "")
     {
         $refundStatus = 'none';
         $refundAmount = 0;
@@ -181,6 +232,17 @@ class StripeQueryService
             $refundAmount = $charge->amount_refunded / 100;
             $refundStatus = ($refundAmount == ($charge->amount / 100)) ? 'fully_refunded' : 'partially_refunded';
         }
+		/**$arnStr = "";
+		if (!empty($charge->destination_payment)) {
+			$destinationCharge = \Stripe\Charge::retrieve($charge->destination_payment);
+			$arnStr = $destinationCharge->transfer_data->arn ?? null;
+		}
+
+		if (!empty($charge->balance_transaction) && empty($arnStr)) {
+			$txn = \Stripe\BalanceTransaction::retrieve($charge->balance_transaction);
+			$arnStr = $txn->source->transfer_data->arn ?? null;
+		}**/
+		
         return [
             $charge->billing_details->email ?? $charge->receipt_email ?? '',
             $charge->id,
@@ -191,10 +253,11 @@ class StripeQueryService
             $refundStatus,
             number_format($refundAmount, 2, '.', ''),
             date('Y-m-d H:i:s', $charge->created),
-            $charge->payment_method_details ? $charge->payment_method_details->type : "",
-            $charge->payment_method_details->card->last4 ?? '',
-            $charge->presentment_details ? $charge->presentment_details->presentment_amount : "",
-            $charge->presentment_details ? $charge->presentment_details->presentment_currency : "",
+            isset($charge->payment_method_details) ? $charge->payment_method_details->type : "",
+            isset($charge->payment_method_details) ? $charge->payment_method_details->card->last4 ?? '':'',
+            isset($charge->presentment_details) ? $charge->presentment_details->presentment_amount : "",
+            isset($charge->presentment_details) ? $charge->presentment_details->presentment_currency : "",
+			$arnStr,
         ];
     }
 
@@ -202,7 +265,7 @@ class StripeQueryService
     {
         // 定义 CSV 文件的列标题
         $lines = [];
-        $lines[] = ['email', 'transaction_id', 'amount', 'currency', 'status', 'paymentIntent', 'refundStatus', 'refundAmount', 'created_at','paymentMethod','paymentLast4','presentmentAmount','presentmentCurrency'];
+        $lines[] = ['email', 'transaction_id', 'amount', 'currency', 'status', 'paymentIntent', 'refundStatus', 'refundAmount', 'created_at','paymentMethod','paymentLast4','presentmentAmount','presentmentCurrency','arn'];
 
         // 遍历数据并将每行数据添加到 $lines 数组
         foreach ($data as $row) {
