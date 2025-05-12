@@ -25,7 +25,7 @@ class PathConfigurator {
     }
     
     private function validateInputs() {
-        if (empty($this->baseName) {
+        if (empty($this->baseName)) {
             throw new Exception("Base name cannot be empty");
         }
         
