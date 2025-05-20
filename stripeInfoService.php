@@ -20,25 +20,21 @@ class StripeInfoService
     {
         $account = Account::retrieve();
 		
-		$requirements = $account->requirements;
+		$requirements = $account->disabled_reason ?? null;
 
-		$underReview = !empty($requirements->currently_due) || !empty($requirements->past_due);
+		#$underReview = !empty($requirements->currently_due) || !empty($requirements->past_due);
 
 		// 输出信息
-		echo "是否正在审核： " . ($underReview ? '是' : '否') . "\n";
+		 
 
-		echo "\n需要提交的项目（currently_due）：\n";
-		print_r($requirements->currently_due);
+		echo "\n原因（currently_due）：\n";
+		print_r($requirements);
+		
+		$isVerified = $account->details_submitted && $account->charges_enabled && $account->payouts_enabled;
 
-		echo "\n过期未提交的项目（past_due）：\n";
-		print_r($requirements->past_due);
-
-		echo "\n未来需要提交的项目（eventually_due）：\n";
-		print_r($requirements->eventually_due);
-
-		echo "\n已提交但待审核（pending_verification）：\n";
-		print_r($requirements->pending_verification);
-
+echo "是否完成审核： " . ($isVerified ? '是' : '否') . "\n";
+echo "被禁用的原因： " . ($account->disabled_reason ?? '无') . "\n";
+ 
         return [
             'id' => $account->id,
             'email' => $account->email,
