@@ -119,7 +119,7 @@ class StripeInfoService
 			echo "\n=== 交易统计 ===\n";
 			print_r($data['charge_stats']);
 		}
-		return '';
+		return [];
         return [
 				'account_status' => $this->getAccountStatus(),
 				'charge_stats' => $this->getChargeStats(),
