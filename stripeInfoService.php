@@ -67,21 +67,21 @@ class StripeInfoService
         $pending = 0;
 
         foreach ($balance->available as $item) {
-            if ($item->currency === 'usd') {
+            if ($item->currency === 'eur') {
                 $available += $item->amount;
             }
         }
 
         foreach ($balance->pending as $item) {
-            if ($item->currency === 'usd') {
+            if ($item->currency === 'eur') {
                 $pending += $item->amount;
             }
         }
 
         return [
-            'available_usd' => $available / 100,
-            'pending_usd' => $pending / 100,
-            'total_usd' => ($available + $pending) / 100,
+            'available_eur' => $available / 100,
+            'pending_eur' => $pending / 100,
+            'total_eur' => ($available + $pending) / 100,
         ];
     }
 
