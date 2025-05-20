@@ -8,7 +8,7 @@ require_once 'stripeProductService.php';
 
 //php main.php -refund --translateId=
 // 获取命令行参数
-$options = getopt('', ['refund', 'transactionId:', 'amount:', 'product', 'prices:','count:','search','last4s:','emails:','transIds:','type:','date:','edate:','link:','arn:','all','info']);
+$options = getopt('', ['refund', 'transactionId:', 'amount:', 'product', 'prices:','count:','search','last4s:','emails:','transIds:','type:','date:','edate:','link:','arn:','all','info','stats','currency:']);
 
 if (isset($options['refund'])) {
 
@@ -54,20 +54,27 @@ if (isset($options['refund'])) {
     if (isset($options['arn'])) {
         $param['arn']=anyToArray($options['arn']);
     }
-}elseif(isset($options['info'])){
+}elseif(isset($options['info'])){	//--info --currency=eur --stats
 	require_once 'stripeInfoService.php';
-	$service = new StripeInfoService(STRIPE_SK);
+	$currency='usd';
+	if(isset($options['currency']){
+		$currency = $options['currency'];
+	}
+	$service = new StripeInfoService(STRIPE_SK,$currency);
 
 	$data = $service->getAllInfo();
 
 	echo "=== 账号状态 ===\n";
 	print_r($data['account_status']);
 
-	echo "\n=== 交易统计 ===\n";
-	print_r($data['charge_stats']);
-
 	echo "\n=== 余额信息 ===\n";
 	print_r($data['balance']);
+	
+	if(isset($options['stats']){
+		echo "\n=== 交易统计 ===\n";
+		print_r($data['charge_stats']);
+	}	
+
 } elseif (isset($options['search'])) {
     $param = [];
     if (isset($options['last4s'])) {

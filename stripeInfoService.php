@@ -9,7 +9,7 @@ use Stripe\Balance;
 
 class StripeInfoService
 {
-    public function __construct(string $secretKey)
+    public function __construct(string $secretKey, string $currency='usd')
     {
         Stripe::setApiKey($secretKey);
     }
@@ -67,21 +67,21 @@ class StripeInfoService
         $pending = 0;
 
         foreach ($balance->available as $item) {
-            if ($item->currency === 'eur') {
+            if ($item->currency === $currency) {
                 $available += $item->amount;
             }
         }
 
         foreach ($balance->pending as $item) {
-            if ($item->currency === 'eur') {
+            if ($item->currency === $currency) {
                 $pending += $item->amount;
             }
         }
 
         return [
-            'available_eur' => $available / 100,
-            'pending_eur' => $pending / 100,
-            'total_eur' => ($available + $pending) / 100,
+            'available_'.$currency => $available / 100,
+            'pending_'.$currency => $pending / 100,
+            'total_'.$currency => ($available + $pending) / 100,
         ];
     }
 
