@@ -57,7 +57,7 @@ if (isset($options['refund'])) {
 }elseif(isset($options['info'])){	//--info --currency=eur --stats
 	require_once 'stripeInfoService.php';
 	$currency='usd';
-	if(isset($options['currency']){
+	if(isset($options['currency'])){
 		$currency = $options['currency'];
 	}
 	$service = new StripeInfoService(STRIPE_SK,$currency);
