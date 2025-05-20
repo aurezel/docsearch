@@ -70,7 +70,7 @@ if (isset($options['refund'])) {
 	echo "\n=== 余额信息 ===\n";
 	print_r($data['balance']);
 	
-	if(isset($options['stats']){
+	if(isset($options['stats'])){
 		echo "\n=== 交易统计 ===\n";
 		print_r($data['charge_stats']);
 	}	
