@@ -5,6 +5,7 @@ require_once 'stripeQueryService.php';
 require_once 'stripeRefundService.php';
 require_once 'stripeProductService.php';
 
+
 //php main.php -refund --translateId=
 // 获取命令行参数
 $options = getopt('', ['refund', 'transactionId:', 'amount:', 'product', 'prices:','count:','search','last4s:','emails:','transIds:','type:','date:','edate:','link:','arn:','all','info']);
@@ -54,6 +55,7 @@ if (isset($options['refund'])) {
         $param['arn']=anyToArray($options['arn']);
     }
 }elseif(isset($options['info'])){
+	require_once 'stripeInfoService.php';
 	$service = new StripeInfoService(STRIPE_SK);
 
 	$data = $service->getAllInfo();
