@@ -9,9 +9,11 @@ use Stripe\Balance;
 
 class StripeInfoService
 {
+	private string $currency;
     public function __construct(string $secretKey, string $currency='usd')
     {
         Stripe::setApiKey($secretKey);
+		$this->currency = strtolower($currency);
     }
 
     public function getAccountStatus(): array
@@ -55,7 +57,8 @@ class StripeInfoService
         return [
             'total_charges' => $totalCharges,
             'successful_charges' => $successfulCharges,
-            'refund_amount_usd' => $totalRefundAmount / 100,
+            'refund_amount' => $totalRefundAmount / 100,
+			'currency' => strtoupper($this->currency),
             'last_transaction_time' => $lastTransactionTime > 0 ? date('Y-m-d H:i:s', $lastTransactionTime) : null,
         ];
     }
@@ -73,24 +76,35 @@ class StripeInfoService
         }
 
         foreach ($balance->pending as $item) {
-            if ($item->currency === $currency) {
+            if ($item->currency === $this->currency) {
                 $pending += $item->amount;
             }
         }
 
         return [
-            'available_'.$currency => $available / 100,
-            'pending_'.$currency => $pending / 100,
-            'total_'.$currency => ($available + $pending) / 100,
+            'available' => $available / 100,
+            'pending' => $pending / 100,
+            'total' => ($available + $pending) / 100,
+			'currency' => strtoupper($this->currency),
         ];
     }
 
-    public function getAllInfo(): array
+    public function getAllInfo($type=1): array
     {
+		echo "=== 账号状态 ===\n";
+		print_r($this->getAccountStatus());
+
+		echo "\n=== 余额信息 ===\n";
+		print_r($this->getBalance());
+		if($type==2){ 
+			echo "\n=== 交易统计 ===\n";
+			print_r($data['charge_stats']);
+		}
+		return '';
         return [
-            'account_status' => $this->getAccountStatus(),
-            'charge_stats' => $this->getChargeStats(),
-            'balance' => $this->getBalance(),
-        ];
+				'account_status' => $this->getAccountStatus(),
+				'charge_stats' => $this->getChargeStats(),
+				'balance' => $this->getBalance(),
+			];
     }
 }
