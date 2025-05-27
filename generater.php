@@ -4,8 +4,8 @@
 class PathConfigurator {
     private $baseName;
     private $suffix;
-    private $envFile = 'public_html/checkout/.env';
-    private $htaccessFile = 'public_html/.htaccess';
+    private $envFile = '../checkout/.env';
+    private $htaccessFile = '../.htaccess';
     
     public function __construct($baseName, $suffix) {
         $this->baseName = $baseName;
@@ -44,8 +44,8 @@ class PathConfigurator {
     
     private function updateEnvFile() {
         $searchLines = [
-            'checkout_success_path=/neckilla/success',
-			'checkout_cancel_path=/neckilla/cancel'
+            'checkout_success_path = "/neckilla/success"',
+			'checkout_cancel_path = "/neckilla/cancel"'
         ];
         
         $replaceLines = [
