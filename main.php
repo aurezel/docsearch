@@ -62,9 +62,9 @@ if (isset($options['refund'])) {
 	}
 	$service = new StripeInfoService(STRIPE_SK,$currency);
 	$type=1;
-	if(isset($options['stat'])){ 
-		$type=2;
-	}
+	if(isset($options['stat']) && in_array($options['stat'],[2,3])){ 
+		$type=$options['stat'];
+	} 
 	$service->getAllInfo($type);
 
 	
