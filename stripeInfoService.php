@@ -41,7 +41,7 @@ class StripeInfoService
             'charges_enabled' => $account->charges_enabled ? "true":"false",
             'payouts_enabled' => $account->payouts_enabled ? "true":"false",
             'details_submitted' => $account->details_submitted,
-            'descriptor' => $account->settings['payments']['statement_descriptor'] ?? 'N/A';
+            'descriptor' => $account->settings['payments']['statement_descriptor'] ?? 'N/A',
         ];
     }
 
