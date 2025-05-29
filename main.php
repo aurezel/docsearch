@@ -38,14 +38,11 @@ if (isset($options['refund'])) {
 		$count = 3;
     }
     if (!isset($options['names'])) {
-        $productName = [
-            "Entire Total", "Full Total", "Overall Total", "Complete Total", "Whole Total",
-            "Sum Total", "Gross Total", "Final Amount", "Complete Sum", "Grand Total"
-        ];
+        $productName = ["Entire Total","Full Total","Overall Total","Complete Total","Whole Total","Sum Total","Gross Total","Final Amount","Complete Sum","Grand Total","Entire Sum","Full Amount","Overall Sum","Whole Amount","Final Total","Aggregate Total","Final Sum","Net Total","Total Amount","Total Sum","Final Figure","Entire Amount","Final Value","Gross Amount","Grand Sum","Complete Figure","Cumulative Total","Complete Amount","Whole Figure","Net Amount","Full Sum","Absolute Total","Total Balance","Total Charge","Invoice Total","Final Count","Whole Count","Full Balance","Complete Balance","Total Value","Grand Figure","Final Payment","Total Quantity","Entire Balance","Final Settlement","Total Payable","Sum Amount","Final Gross","Gross Sum","Total Result","Total Revenue","Overall Charge","Overall Amount","Whole Charge","Total Collection","Total Number","Final Collection","Grand Amount","Complete Revenue","Final Charge","Entire Value","Full Count","Total Line","Full Settlement","Final Invoice","Total Cost","Final Output","Net Sum","Complete Output","Entire Figure","Whole Sum","Final Result","Total Due","Entire Invoice","Whole Payment","Overall Figure","Total Funds","Invoice Amount","Net Figure","Total Payment","Full Revenue","Invoice Sum","Final Total Value","Accumulated Total","Final Calculation","Summed Total","Finalized Amount","Full Gross","Calculated Total","Rounded Total","Fixed Total","Grand Invoice","Full Invoice","Closing Total","Statement Total","Entire Payable","Net Charge","Collected Total","Cleared Total","Statement Amount"];
     }
 
-    // 创建产品服务实例
-    $productService = new StripeProductService(STRIPE_SK,PRODUCT_PRICE,LOCAL_CURRENCY,$productName,3,1);
+    // 创建产品服务实例 type1 product.csv,type2 product.csv product_prices.csv,
+    $productService = new StripeProductService(STRIPE_SK,PRODUCT_PRICE,LOCAL_CURRENCY,$productName,$count,1);
     $product = $productService->createProducts();
 
     echo "Product created: " . $product->name . "\n";

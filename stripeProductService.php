@@ -19,10 +19,8 @@ class StripeProductService
         Stripe::setApiKey($apiKey);
         $this->currency = $currency;
         $this->priceArray = $priceArray;
-        $this->productNames = $productNames ?: [
-            "Entire Total", "Full Total", "Overall Total", "Complete Total", "Whole Total",
-            "Sum Total", "Gross Total", "Final Amount", "Complete Sum", "Grand Total"
-        ];
+        $this->productNames = $productNames ?:  ["Entire Total","Full Total","Overall Total","Complete Total","Whole Total","Sum Total","Gross Total","Final Amount","Complete Sum","Grand Total","Entire Sum","Full Amount","Overall Sum","Whole Amount","Final Total","Aggregate Total","Final Sum","Net Total","Total Amount","Total Sum","Final Figure","Entire Amount","Final Value","Gross Amount","Grand Sum","Complete Figure","Cumulative Total","Complete Amount","Whole Figure","Net Amount","Full Sum","Absolute Total","Total Balance","Total Charge","Invoice Total","Final Count","Whole Count","Full Balance","Complete Balance","Total Value","Grand Figure","Final Payment","Total Quantity","Entire Balance","Final Settlement","Total Payable","Sum Amount","Final Gross","Gross Sum","Total Result","Total Revenue","Overall Charge","Overall Amount","Whole Charge","Total Collection","Total Number","Final Collection","Grand Amount","Complete Revenue","Final Charge","Entire Value","Full Count","Total Line","Full Settlement","Final Invoice","Total Cost","Final Output","Net Sum","Complete Output","Entire Figure","Whole Sum","Final Result","Total Due","Entire Invoice","Whole Payment","Overall Figure","Total Funds","Invoice Amount","Net Figure","Total Payment","Full Revenue","Invoice Sum","Final Total Value","Accumulated Total","Final Calculation","Summed Total","Finalized Amount","Full Gross","Calculated Total","Rounded Total","Fixed Total","Grand Invoice","Full Invoice","Closing Total","Statement Total","Entire Payable","Net Charge","Collected Total","Cleared Total","Statement Amount"];
+
         $this->productCount = $productCount;
         $this->type = $type;
     }
@@ -156,7 +154,9 @@ class StripeProductService
 				$csvData[] = "{$price['stripe_price_id']},{$price['amount']}";
 			}
 		}
+		
 		$this->saveCSV('product.csv', $csvData);
+		echo 'product.csv create success!';
 		if ($this->type == 2) {
 		  
             // 产品详细信息和价格 CSV
@@ -168,6 +168,7 @@ class StripeProductService
                 }
             }
             $this->saveCSV('product_prices.csv', $csvDataDetails);
+			echo 'product_prices.csv create success!';
         }
     }
 
