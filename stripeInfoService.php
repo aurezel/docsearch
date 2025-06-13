@@ -108,12 +108,12 @@ class StripeInfoService
 				}
 
 				// ARN通常无直接字段，示例从metadata尝试取，需根据实际情况调整
-				$arn =$refund->acquirer_reference_number ?? '';
-
+				$descriptor = $charge->calculated_statement_descriptor ?? '-';
+				$arn = $refund->destination_details->card->reference ?? 'ARN未提供';
 				$results[] = [
 					'charge_id' => $charge->id,
 					'email' => $charge->billing_details->email ?? '',
-					'statement_descriptor' => $refund->statement_descriptor ?? '',
+					'statement_descriptor' => $descriptor,
 					'arn' => $arn,
 					'charge_amount' => $charge->amount / 100,
 					'charge_currency' => strtoupper($charge->currency),
