@@ -79,43 +79,58 @@ class StripeInfoService
         ];
     }
 	
-	public function getArn(): array
-	{
-		$endTime = time();
-		$refunds = \Stripe\Refund::all([
-			'created' => [ 
-				'lte' => $endTime,
-			],
+	function getVisaRefundsDetailed() {
+		$twoMonthsAgo = strtotime('-2 months');
+		$params = [
 			'limit' => 100,
-		]);
-		$arnInfo=[];
-		foreach ($refunds->autoPagingIterator() as $refund) {
-			$refundId = $refund->id;
-			$chargeId = $refund->charge ?? null;
+			'created' => ['gte' => $twoMonthsAgo],
+		];
 
-			if (!$chargeId) {
-				continue; // 跳过没有关联 charge 的退款
+		$results = [];
+		$hasMore = true;
+		$startingAfter = null;
+
+		while ($hasMore) {
+			if ($startingAfter) {
+				$params['starting_after'] = $startingAfter;
 			}
 
-			try {
-				$charge = \Stripe\Charge::retrieve($chargeId);
-				$descriptor = $charge->statement_descriptor ?? 'N/A';
-				$arn = 'N/A';
+			$refundList = \Stripe\Refund::all($params);
 
-				if (!empty($charge->balance_transaction)) {
-					$balanceTx = \Stripe\BalanceTransaction::retrieve($charge->balance_transaction);
-					if (!empty($balanceTx->source) && is_object($balanceTx->source) && property_exists($balanceTx->source, 'arn')) {
-						$arn = $balanceTx->source->arn;
-					}
+			foreach ($refundList->data as $refund) {
+				$charge = \Stripe\Charge::retrieve($refund->charge);
+
+				$cardDetails = $charge->payment_method_details->card ?? null;
+				$cardBrand = $cardDetails ? strtolower($cardDetails->brand) : '';
+
+				if ($cardBrand !== 'visa') {
+					continue; // 非Visa跳过
 				}
 
-				echo "Refund ID: $refundId\tCharge ID: $chargeId\tDescriptor: $descriptor\tARN: $arn\n";
-				$arnInfo = ['charge_id'=> $chargeId,'descriptor'=>$descriptor,'arn'=>$arn];
-			} catch (\Exception $e) {
-				echo "Refund ID: $refundId\tError retrieving charge: " . $e->getMessage() . "\n";
+				// ARN通常无直接字段，示例从metadata尝试取，需根据实际情况调整
+				$arn = $charge->metadata->arn ?? ($cardDetails->arn ?? null);
+
+				$results[] = [
+					'charge_id' => $charge->id,
+					'email' => $charge->billing_details->email ?? '',
+					'statement_descriptor' => $charge->statement_descriptor ?? '',
+					'arn' => $arn,
+					'charge_amount' => $charge->amount / 100,
+					'charge_currency' => strtoupper($charge->currency),
+					'charge_time' => date('Y-m-d H:i:s', $charge->created),
+					'refund_amount' => $refund->amount / 100,
+					'refund_time' => date('Y-m-d H:i:s', $refund->created),
+					'card_brand' => ucfirst($cardBrand),
+				];
+			}
+
+			$hasMore = $refundList->has_more;
+			if ($hasMore) {
+				$startingAfter = end($refundList->data)->id;
 			}
 		}
-		return $arnInfo;
+
+		return $results;
 	}
 	
     public function getBalance(): array
@@ -160,7 +175,7 @@ class StripeInfoService
 		
 		if($type==3){ 
 			echo "\n=== ARN与描述符信息 ===\n";
-			print_r($this->getArn()); 
+			print_r($this->getVisaRefundsDetailed()); 
 		} 
 		return [];
         return [
