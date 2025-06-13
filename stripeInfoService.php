@@ -175,7 +175,17 @@ class StripeInfoService
 		
 		if($type==3){ 
 			echo "\n=== ARN与描述符信息 ===\n";
-			print_r($this->getVisaRefundsDetailed()); 
+			$data = $this->getVisaRefundsDetailed();
+			if($data){
+				$headers = array_keys($data[0]);
+				echo implode("\t", $headers) . PHP_EOL;
+
+				// 输出每一行数据
+				foreach ($data as $row) {
+					echo implode(',', $row) . PHP_EOL;
+				}
+			}
+			
 		} 
 		return [];
         return [
