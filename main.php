@@ -8,7 +8,7 @@ require_once 'stripeProductService.php';
 
 //php main.php -refund --translateId=
 // 获取命令行参数
-$options = getopt('', ['refund', 'transactionId:', 'amount:', 'product', 'prices:','count:','search','last4s:','emails:','transIds:','type:','date:','edate:','link:','arn:','all','info','stat:','currency:']);
+$options = getopt('', ['refund', 'transactionId:', 'amount:', 'product','priceList', 'prices:','count:','search','last4s:','emails:','transIds:','type:','date:','edate:','link:','arn:','all','info','stat:','currency:']);
 
 if (isset($options['refund'])) {
 
@@ -25,8 +25,7 @@ if (isset($options['refund'])) {
         echo "Refund processed for transaction ID: $transactionId\n";
         echo "Refund status: " . json_encode($refund) . "\n";
     }
-
-
+ 
 } elseif (isset($options['product'])) {
     // 处理产品创建
     if (isset($options['prices'])) {
@@ -43,10 +42,15 @@ if (isset($options['refund'])) {
 
     // 创建产品服务实例 type1 product.csv,type2 product.csv product_prices.csv,
     $productService = new StripeProductService(STRIPE_SK,PRODUCT_PRICE,LOCAL_CURRENCY,$productName,$count,1);
-    $product = $productService->createProducts();
+	
+	if(isset($options['param']) && $options['param'] =="priceList"){
+		$productService->priceList();
+		exit;
+	}elseif(isset($options['param']) && $options['param'] =="create"){
+		$product = $productService->createProducts();
+	}     
 
-    echo "Product created: " . $product->name . "\n";
-    echo "Product ID: " . $product->id . "\n";
+     
 } elseif (isset($options['arnList'])) {
     if (isset($options['arn'])) {
         $param['arn']=anyToArray($options['arn']);

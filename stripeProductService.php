@@ -29,6 +29,28 @@ class StripeProductService
      * 创建指定数量的产品及对应价格
      * @return array
      */
+	public function priceList()
+	{
+		$products = \Stripe\Product::all(['limit' => 100]);
+
+		foreach ($products->data as $product) {
+			echo "产品ID: " . $product->id . "，产品名: " . $product->name . PHP_EOL;
+
+			// 根据产品ID获取对应的价格列表
+			$prices = \Stripe\Price::all(['product' => $product->id, 'limit' => 10]);
+
+			if (count($prices->data) === 0) {
+				echo "  无价格" . PHP_EOL;
+				continue;
+			}
+
+			foreach ($prices->data as $price) {
+				echo "  价格ID: " . $price->id . ", 金额: " . $price->unit_amount . ", 货币: " . $price->currency . PHP_EOL;
+			}
+			echo "-------------------" . PHP_EOL;
+		}
+	}
+
     public function createProducts()
     {
         $names = $this->productNames;
