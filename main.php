@@ -8,7 +8,7 @@ require_once 'stripeProductService.php';
 
 //php main.php -refund --translateId=
 // 获取命令行参数
-$options = getopt('', ['refund', 'transactionId:', 'amount:', 'product','priceList', 'prices:','count:','search','last4s:','emails:','transIds:','type:','date:','edate:','link:','arn:','all','info','stat:','currency:']);
+$options = getopt('', ['refund', 'transactionId:', 'amount:', 'product','param:', 'prices:','count:','search','last4s:','emails:','transIds:','type:','date:','edate:','link:','arn:','all','info','stat:','currency:']);
 
 if (isset($options['refund'])) {
 
