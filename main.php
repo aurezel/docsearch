@@ -55,18 +55,16 @@ if (isset($options['refund'])) {
     if (isset($options['arn'])) {
         $param['arn']=anyToArray($options['arn']);
     }
-}elseif(isset($options['info'])){	//--info --currency=eur --stat
+}elseif(isset($options['info'])){	//--info --currency=eur --param 2:balance,3:arn,4:payout
 	require_once 'stripeInfoService.php';
 	$currency='usd';
 	if(isset($options['currency'])){
 		$currency = $options['currency'];
 	}
 	$service = new StripeInfoService(STRIPE_SK,$currency);
-	$type=1;
-	if(isset($options['stat']) && in_array($options['stat'],[2,3])){ 
-		$type=$options['stat'];
-	} 
-	$service->getAllInfo($type);
+	$param = $options['param'] ?? 'account';
+	$param = in_array($param, ['account', 'balance', 'arn', 'payout'], true) ? $param : 'account';
+	$service->getAllInfo($param);
 
 	
 

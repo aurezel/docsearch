@@ -147,7 +147,10 @@ class StripeInfoService
 
 		$account = \Stripe\Account::retrieve();
 		$payout_schedule = $account->settings->payouts->schedule;
-		echo "出款频率: " . $payout_schedule->interval . "\n"; // daily, weekly, monthly
+		$interval = $payout_schedule->interval; // daily, weekly, monthly
+		$delay_days = $account->settings->payouts->schedule_delay; // 延迟天数（如3表示T+3）
+		echo '账户出款周期:'. $delay_days."\n";
+		echo '账户出款频率:'. $interval."\n";		
 		foreach ($payouts as $payout) {
 			echo "出款ID: " . $payout->id . "\n";
 			echo "金额: $" . number_format($payout->amount / 100, 2) . "\n";
@@ -186,23 +189,22 @@ class StripeInfoService
 
     public function getAllInfo($type=1): array
     {
-		if($type==1){
+		if($type=='account'){
 			echo "=== 账号状态 ===\n";
 			print_r($this->getAccountStatus());
 		}
 		 
-		if($type==2){ 
+		if($type=='balance'){ 
 			echo "\n=== 余额信息 ===\n";
 			print_r($this->getBalance());
 			echo "\n=== 交易统计 ===\n";
 			print_r($data['charge_stats']);
 		}
-		if($type==4){ 
+		if($type=='payout'){ 
 			echo "\n=== 出款计划 ===\n";
-			print_r($this->getSchedule());
-			
+			print_r($this->getSchedule()); 
 		}
-		if($type==3){ 
+		if($type=='arn'){ 
 			echo "\n=== ARN与描述符信息 ===\n";
 			$data = $this->getVisaRefundsDetailed();
 			if($data){
