@@ -20,15 +20,18 @@ class StripeInfoService
     {
         $account = Account::retrieve();
 		
-		$available = 0;
-		$pending = 0;
-		$reserved_for_disputes = 0; // 这就是冻结余额
+		$balance = \Stripe\Balance::retrieve();
+		
+		// 处理余额数据
+		$available = 0;    // 可用余额
+		$pending = 0;      // 待到账余额
 		
 		foreach ($balance->available as $fund) {
 			$available += $fund->amount;
-			if (isset($fund->source_types->card)) {
-				$reserved_for_disputes += $fund->source_types->card->amount - $fund->amount;
-			}
+		}
+		
+		foreach ($balance->pending as $fund) {
+			$pending += $fund->amount;
 		}
 		
 		// 总余额是可用余额 + 待到账余额
@@ -40,8 +43,8 @@ class StripeInfoService
             'charges_enabled' => $account->charges_enabled ? "true":"false",
             'payouts_enabled' => $account->payouts_enabled ? "true":"false",
             'total' => number_format($total / 100, 2),
-            'formatted_available' => number_format($available / 100, 2) ,
-            'reserved_for_disputes ' => number_format($reserved_for_disputes / 100, 2),
+            'formatted_available' => number_format($available / 100, 2),
+            'formatted_pending' => number_format($pending / 100, 2),
             'details_submitted' => $account->details_submitted,
             'descriptor' => $account->settings['payments']['statement_descriptor'] ?? 'N/A',
         ];
