@@ -159,6 +159,7 @@ class StripeInfoService
 			echo "出款方式: " . $payout->method . "\n"; // standard（普通）或 instant（即时）
 			echo "---\n";
 		}
+		return [];
 	}
 	
     public function getBalance(): array
