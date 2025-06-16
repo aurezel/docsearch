@@ -20,26 +20,28 @@ class StripeInfoService
     {
         $account = Account::retrieve();
 		
-#		$requirements = $account->disabled_reason ?? null;
-
-		#$underReview = !empty($requirements->currently_due) || !empty($requirements->past_due);
-
-		// 输出信息
-		 
-
-#		echo "\n原因（currently_due）：\n";
-#		print_r($requirements);
+		$available = 0;
+		$pending = 0;
+		$reserved_for_disputes = 0; // 这就是冻结余额
 		
-#		$isVerified = $account->details_submitted && $account->charges_enabled && $account->payouts_enabled;
-
-#echo "是否完成审核： " . ($isVerified ? '是' : '否') . "\n";
-#echo "被禁用的原因： " . ($account->disabled_reason ?? '无') . "\n";
- 
+		foreach ($balance->available as $fund) {
+			$available += $fund->amount;
+			if (isset($fund->source_types->card)) {
+				$reserved_for_disputes += $fund->source_types->card->amount - $fund->amount;
+			}
+		}
+		
+		// 总余额是可用余额 + 待到账余额
+		$total = $available + $pending;
+		 
         return [
             'id' => $account->id,
             'email' => $account->email,
             'charges_enabled' => $account->charges_enabled ? "true":"false",
             'payouts_enabled' => $account->payouts_enabled ? "true":"false",
+            'total' => number_format($total / 100, 2),
+            'formatted_available' => number_format($available / 100, 2) ,
+            'reserved_for_disputes ' => number_format($reserved_for_disputes / 100, 2),
             'details_submitted' => $account->details_submitted,
             'descriptor' => $account->settings['payments']['statement_descriptor'] ?? 'N/A',
         ];
