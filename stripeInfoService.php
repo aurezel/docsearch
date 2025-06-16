@@ -138,6 +138,26 @@ class StripeInfoService
 		return $results;
 	}
 	
+	public function getSchedule():array
+	{
+		$payouts = \Stripe\Payout::all([
+			'limit' => 10,
+			'status' => 'pending' // 也可查 paid, failed
+		]);
+
+		$account = \Stripe\Account::retrieve();
+		$payout_schedule = $account->settings->payouts->schedule;
+		echo "出款频率: " . $payout_schedule->interval . "\n"; // daily, weekly, monthly
+		foreach ($payouts as $payout) {
+			echo "出款ID: " . $payout->id . "\n";
+			echo "金额: $" . number_format($payout->amount / 100, 2) . "\n";
+			echo "状态: " . $payout->status . "\n";
+			echo "预计到账日期: " . date('Y-m-d', $payout->arrival_date) . "\n"; // 关键字段！
+			echo "出款方式: " . $payout->method . "\n"; // standard（普通）或 instant（即时）
+			echo "---\n";
+		}
+	}
+	
     public function getBalance(): array
     {
         $balance = Balance::retrieve();
@@ -177,7 +197,11 @@ class StripeInfoService
 			echo "\n=== 交易统计 ===\n";
 			print_r($data['charge_stats']);
 		}
-		
+		if($type==4){ 
+			echo "\n=== 出款计划 ===\n";
+			print_r($this->getSchedule());
+			
+		}
 		if($type==3){ 
 			echo "\n=== ARN与描述符信息 ===\n";
 			$data = $this->getVisaRefundsDetailed();
