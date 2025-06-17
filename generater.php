@@ -50,7 +50,7 @@ class PathConfigurator {
         
         $replaceLines = [
             "checkout_success_path = \"/{$this->baseName}pay/success{$this->suffix}\"",
-            "checkout_cancel_path = \"{$this->baseName}pay/cancel{$this->suffix}\""
+            "checkout_cancel_path = \"/{$this->baseName}pay/cancel{$this->suffix}\""
         ];
         
         $envContent = file_get_contents($this->envFile);
