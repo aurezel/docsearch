@@ -37,7 +37,7 @@ class StripeProductService
 			echo "产品ID: " . $product->id . "，产品名: " . $product->name . PHP_EOL;
 
 			// 根据产品ID获取对应的价格列表
-			$prices = \Stripe\Price::all(['product' => $product->id, 'limit' => 10]);
+			$prices = \Stripe\Price::all(['product' => $product->id, 'limit' => 20]);
 
 			if (count($prices->data) === 0) {
 				echo "  无价格" . PHP_EOL;
@@ -56,7 +56,7 @@ class StripeProductService
         $names = $this->productNames;
         shuffle($names);  // 随机打乱产品名
         $chosenNames = array_slice($names, 0, $this->productCount);
-
+		$randomInt = random_int(0,9);
         // 将价格数组按顺序随机切割成若干区间
         $priceChunks = $this->getRandomPriceChunks();
 
@@ -81,7 +81,7 @@ class StripeProductService
                 // 为每个价格创建价格对象
                 $price = Price::create([
                     'product' => $product->id,
-                    'unit_amount' => intval(round($priceValue * 100)), // 美分
+                    'unit_amount' => intval(round(($priceValue + $randomInt) * 100)), // 美分
                     'currency' => $this->currency,
                 ]);
 
