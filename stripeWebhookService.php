@@ -164,7 +164,7 @@ class StripeWebhookService
     }
 }
 
-#$stripe = new StripeWebhookService("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");
+#$stripe = new StripeWebhookService($apiKey);
 #$result = $stripe -> createWebhook("https://yahoo2.com","/stripe/notify");
 #var_dump($stripe->listWebhooks());
 #var_dump($result);
