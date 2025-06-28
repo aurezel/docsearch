@@ -164,7 +164,4 @@ class StripeWebhookService
     }
 }
 
-#$stripe = new StripeWebhookService($apiKey);
-#$result = $stripe -> createWebhook("https://yahoo2.com","/stripe/notify");
-#var_dump($stripe->listWebhooks());
-#var_dump($result);
+ 
