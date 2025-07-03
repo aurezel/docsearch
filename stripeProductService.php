@@ -81,7 +81,7 @@ class StripeProductService
                 // 为每个价格创建价格对象
                 $price = Price::create([
                     'product' => $product->id,
-                    'unit_amount' => intval(round(($priceValue + $randomInt) * 100)), // 美分
+                    'unit_amount' => intval(round($priceValue * 100 + $randomInt)), // 美分 价格
                     'currency' => $this->currency,
                 ]);
 
