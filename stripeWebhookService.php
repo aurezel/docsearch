@@ -23,7 +23,7 @@ class StripeWebhookService
     public function createWebhook(string $domain, string $path = '/v1/StripeBankNotify', array $events = []): array
     {
         try {
-            $url = rtrim($domain, '/') . $path;
+            $url = rtrim($domain, '/') . "/".ltrim($path);
 
             $existing = WebhookEndpoint::all();
             foreach ($existing->data as $endpoint) {
