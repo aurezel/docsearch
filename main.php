@@ -138,7 +138,7 @@ function handleInfo(array $options)
 {
     $currency = $options['currency'] ?? 'usd';
     $param = $options['param'] ?? 'account';
-    $param = in_array($param, ['account', 'balance', 'arn', 'payout'], true) ? $param : 'account';
+    $param = in_array($param, ['account', 'balance', 'arn', 'payout','analysis'], true) ? $param : 'account';
 
     $infoService = new StripeInfoService(STRIPE_SK, $currency);
     $infoService->getAllInfo($param);
