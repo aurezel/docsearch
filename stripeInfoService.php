@@ -84,6 +84,80 @@ class StripeInfoService
         ];
     }
 	
+	
+	public function getDetailedChargeAnalysis(): array
+	{
+		$charges = \Stripe\Charge::all(['limit' => 100]);
+		$allCharges = [];
+
+		$latestSuccessTime = 0;
+
+		// 临时汇总变量
+		$countryCounts = [];
+		$totalSuccess = 0;
+		$disputesInWindow = 0;
+		$totalInWindow = 0;
+
+		$cardTypeCounts = [
+			'credit' => 0,
+			'debit' => 0,
+			'prepaid' => 0,
+			'unknown' => 0
+		];
+
+		// Step 1: 找出最新成功交易时间
+		foreach ($charges->autoPagingIterator() as $charge) {
+			if ($charge->paid && !$charge->refunded && $charge->status === 'succeeded') {
+				if ($charge->created > $latestSuccessTime) {
+					$latestSuccessTime = $charge->created;
+				}
+				$allCharges[] = $charge;
+			}
+		}
+
+		$cutoff = $latestSuccessTime - 30 * 24 * 60 * 60;
+
+		// Step 2: 遍历成功交易，统计国家、卡类型、拒付等
+		foreach ($allCharges as $charge) {
+			$country = $charge->payment_method_details->card->country ?? 'Unknown';
+			$funding = $charge->payment_method_details->card->funding ?? 'unknown';
+
+			$totalSuccess++;
+
+			// 国家统计
+			if (!isset($countryCounts[$country])) {
+				$countryCounts[$country] = 0;
+			}
+			$countryCounts[$country]++;
+
+			// 卡类型统计
+			if (isset($cardTypeCounts[$funding])) {
+				$cardTypeCounts[$funding]++;
+			} else {
+				$cardTypeCounts['unknown']++;
+			}
+
+			// 拒付率窗口计算
+			if ($charge->created >= $cutoff) {
+				$totalInWindow++;
+				if ($charge->disputed) {
+					$disputesInWindow++;
+				}
+			}
+		}
+
+		arsort($countryCounts); // 按数量排序
+
+		return [
+			'top_countries' => array_slice($countryCounts, 0, 5, true),
+			'total_successful_charges' => $totalSuccess,
+			'dispute_rate_last_30_days' => $totalInWindow > 0 ? round(($disputesInWindow / $totalInWindow) * 100, 2) . '%' : '0%',
+			'card_type_distribution' => $cardTypeCounts,
+			'analysis_cutoff_date' => date('Y-m-d H:i:s', $cutoff),
+			'latest_successful_charge_time' => date('Y-m-d H:i:s', $latestSuccessTime),
+		];
+	}
+
 	function getVisaRefundsDetailed() {
 		$twoMonthsAgo = strtotime('-2 months');
 		$params = [
@@ -193,6 +267,11 @@ class StripeInfoService
 		if($type=='account'){
 			echo "=== 账号状态 ===\n";
 			print_r($this->getAccountStatus());
+		}
+		
+		if($type=='analysis'){
+			echo "=== 账号状态 ===\n";
+			print_r($this->getDetailedChargeAnalysis());
 		}
 		 
 		if($type=='balance'){ 
