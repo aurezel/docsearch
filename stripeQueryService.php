@@ -232,6 +232,8 @@ class StripeQueryService
             $refundAmount = $charge->amount_refunded / 100;
             $refundStatus = ($refundAmount == ($charge->amount / 100)) ? 'fully_refunded' : 'partially_refunded';
         }
+		
+		$card_brand = $charge->payment_method_details->card->brand ?? null;
 		/**$arnStr = "";
 		if (!empty($charge->destination_payment)) {
 			$destinationCharge = \Stripe\Charge::retrieve($charge->destination_payment);
@@ -257,7 +259,7 @@ class StripeQueryService
             isset($charge->payment_method_details) ? $charge->payment_method_details->card->last4 ?? '':'',
             isset($charge->presentment_details) ? $charge->presentment_details->presentment_amount : "",
             isset($charge->presentment_details) ? $charge->presentment_details->presentment_currency : "",
-			$arnStr,
+			$card_brand,
         ];
     }
 
@@ -265,7 +267,7 @@ class StripeQueryService
     {
         // 定义 CSV 文件的列标题
         $lines = [];
-        $lines[] = ['email', 'transaction_id', 'amount', 'currency', 'status', 'paymentIntent', 'refundStatus', 'refundAmount', 'created_at','paymentMethod','paymentLast4','presentmentAmount','presentmentCurrency','arn'];
+        $lines[] = ['email', 'transaction_id', 'amount', 'currency', 'status', 'paymentIntent', 'refundStatus', 'refundAmount', 'created_at','paymentMethod','paymentLast4','presentmentAmount','presentmentCurrency','cardbrand'];
 
         // 遍历数据并将每行数据添加到 $lines 数组
         foreach ($data as $row) {
