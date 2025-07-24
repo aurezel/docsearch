@@ -48,7 +48,7 @@ class StripeWebhookService
 					"invoice.payment_failed",
 					"invoice.payment_action_required",
 					"checkout.session.completed",
-					"payment_intent.succeeded",
+					"payment_intent.succeeded"
 				];
 			}else{
 				$defaultEvents = [
