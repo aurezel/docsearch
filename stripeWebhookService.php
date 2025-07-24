@@ -20,7 +20,7 @@ class StripeWebhookService
      * @param array  $events 要监听的事件
      * @return array
      */
-    public function createWebhook(string $domain, string $path = '/v1/StripeBankNotify', array $events = []): array
+    public function createWebhook(string $domain, string $path = '/v1/StripeBankNotify', int $type=1): array
     {
         try {
             $url = rtrim($domain, '/') . "/".ltrim($path);
@@ -36,18 +36,33 @@ class StripeWebhookService
                     ];
                 }
             }
-
-            $defaultEvents = [
-                "payment_intent.amount_capturable_updated",
-                "payment_intent.canceled",
-                "payment_intent.created",
-                "payment_intent.partially_funded",
-                "payment_intent.payment_failed",
-                "payment_intent.processing",
-                "payment_intent.requires_action",
-                "payment_intent.succeeded"
-            ];
-
+			if($type==2){
+				$defaultEvents = [
+					"charge.refund.updated",
+					"charge.dispute.created",
+					"customer.subscription.created",
+					"customer.subscription.pending_update_expired",
+					"customer.subscription.pending_update_applied",
+					"customer.subscription.deleted",
+					"invoice.paid",
+					"invoice.payment_failed",
+					"invoice.payment_action_required",
+					"checkout.session.completed",
+					"payment_intent.succeeded",
+				];
+			}else{
+				$defaultEvents = [
+					"payment_intent.amount_capturable_updated",
+					"payment_intent.canceled",
+					"payment_intent.created",
+					"payment_intent.partially_funded",
+					"payment_intent.payment_failed",
+					"payment_intent.processing",
+					"payment_intent.requires_action",
+					"payment_intent.succeeded"
+				];
+				
+			}
             $webhook = WebhookEndpoint::create([
                 'url' => $url,
                 'enabled_events' => $events ?: $defaultEvents,

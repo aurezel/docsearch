@@ -37,7 +37,7 @@ $options = getopt('', [
 ]);
 
 //# 发起退款
-//php main.php --refund --transactionId=ch_123 --amount=1000
+//php main.php --refund --transactionId=ch_123 --amount=2
 //
 //# 批量产品创建
 //php main.php --product --param=create
@@ -122,15 +122,18 @@ function handleWebhook(array $options)
 {
     $domain = $options['domain'] ?? '';
     $path = $options['path'] ?? '';
-    $event = []; // 可从 CLI 传入事件支持扩展
-
+    #$event = []; // 可从 CLI 传入事件支持扩展
+	$type = 1;
+	if(isset($type)){
+		$type = $options['type'];		
+	}
     if (!$domain || !$path) {
         echo "⚠️ Error: Please provide both --domain and --path\n";
         exit(1);
     }
 
     $webhookService = new StripeWebhookService(STRIPE_SK);
-    $result = $webhookService->createWebhook($domain, $path, $event);
+    $result = $webhookService->createWebhook($domain, $path, $type);
     print_r($result);
 }
 
