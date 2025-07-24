@@ -31,9 +31,10 @@ $options = getopt('', [
     'stat:',
     'currency:',
     'settings',
-    'webhook:',
+    'webhook',
     'domain:',
     'path:',
+	'id:'
 ]);
 
 //# 发起退款
@@ -46,7 +47,11 @@ $options = getopt('', [
 //php main.php --product --param=priceList
 //
 //# 创建 Webhook
-//php main.php --settings --param=webhook --domain='https://checkout.example.com' --path='v1/StripeBankNotify'
+//php main.php --webhook --param=create --domain='https://checkout.example.com' --path='v1/StripeBankNotify' --type=1
+//# 删除 Webhook
+//php main.php --webhook --param=delete --id= 
+//# 删除 Webhook
+//php main.php --webhook --param=list
 //
 //# 查询账户余额
 //php main.php --info --currency=eur --param=balance
@@ -63,7 +68,7 @@ if (isset($options['refund'])) {
     handleProduct($options);
 
 // === 创建 Webhook ===
-} elseif (isset($options['settings']) && ($options['param'] ?? '') === 'webhook') {
+} elseif (isset($options['webhook'])) {
     handleWebhook($options);
 
 // === 信息查询（账户、余额、ARN 等）===
