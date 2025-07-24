@@ -125,21 +125,45 @@ function handleProduct(array $options)
 
 function handleWebhook(array $options)
 {
-    $domain = $options['domain'] ?? '';
-    $path = $options['path'] ?? '';
-    #$event = []; // 可从 CLI 传入事件支持扩展
-	$type = 1;
-	if(isset($type)){
-		$type = $options['type'];		
-	}
-    if (!$domain || !$path) {
-        echo "⚠️ Error: Please provide both --domain and --path\n";
-        exit(1);
-    }
-
+	$param = $options['param'] ?? '';
     $webhookService = new StripeWebhookService(STRIPE_SK);
-    $result = $webhookService->createWebhook($domain, $path, $type);
-    print_r($result);
+
+    switch ($param) {
+        case 'create':
+            $domain = $options['domain'] ?? '';
+            $path = $options['path'] ?? '';
+            $type = isset($options['type']) ? (int)$options['type'] : 1;
+
+            if (empty($domain) || empty($path)) {
+                echo "⚠️ Error: Please provide both --domain and --path for create operation.\n";
+                exit(1);
+            }
+
+            $result = $webhookService->createWebhook($domain, $path, $type);
+            print_r($result);
+            break;
+
+        case 'delete':
+            $id = $options['id'] ?? '';
+            if (empty($id)) {
+                echo "⚠️ Error: Please provide --id for delete operation.\n";
+                exit(1);
+            }
+
+            $result = $webhookService->deleteWebhook($id);
+            print_r($result);
+            break;
+
+        case 'list':
+            $result = $webhookService->listWebhooks();
+            print_r($result);
+            break;
+
+        default:
+            echo "⚠️ Error: Invalid or missing --param. Supported values: create, delete, list\n";
+            exit(1);
+    }
+	 
 }
 
 function handleInfo(array $options)
