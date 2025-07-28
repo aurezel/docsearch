@@ -36,7 +36,22 @@ class StripeInfoService
 		
 		// 总余额是可用余额 + 待到账余额
 		$total = $available + $pending;
-		 
+		
+		 $externalAccounts = \Stripe\Account::allExternalAccounts(
+			$accountId,
+			['object' => 'bank_account']
+		);
+		
+		$bank_name='';
+		$bank_last4='';
+		$account_holder_name='';
+		if (!empty($externalAccounts->data)) {
+			foreach ($externalAccounts->data as $bankAccount) {
+				$bank_name =  $bankAccount->bank_name;
+				$bank_last4 = $bankAccount->last4;
+				$account_holder_name = $bankAccount->account_holder_name;
+			}
+		}
         return [
             'id' => $account->id,
             'email' => $account->email,
@@ -47,6 +62,9 @@ class StripeInfoService
             'formatted_pending' => number_format($pending / 100, 2),
             'details_submitted' => $account->details_submitted,
             'descriptor' => $account->settings['payments']['statement_descriptor'] ?? 'N/A',
+			'bank_name' => $account->details_submitted,
+			'bank_last4' => $account->details_submitted,
+			'account_holder_name' => $account->details_submitted,
         ];
     }
 
