@@ -37,21 +37,6 @@ class StripeInfoService
 		// 总余额是可用余额 + 待到账余额
 		$total = $available + $pending;
 		
-		 $externalAccounts = \Stripe\Account::allExternalAccounts(
-			$account->id,
-			['object' => 'bank_account']
-		);
-		
-		$bank_name='';
-		$bank_last4='';
-		$account_holder_name='';
-		if (!empty($externalAccounts->data)) {
-			foreach ($externalAccounts->data as $bankAccount) {
-				$bank_name =  $bankAccount->bank_name;
-				$bank_last4 = $bankAccount->last4;
-				$account_holder_name = $bankAccount->account_holder_name;
-			}
-		}
         return [
             'id' => $account->id,
             'email' => $account->email,
@@ -62,9 +47,7 @@ class StripeInfoService
             'formatted_pending' => number_format($pending / 100, 2),
             'details_submitted' => $account->details_submitted,
             'descriptor' => $account->settings['payments']['statement_descriptor'] ?? 'N/A',
-			'bank_name' => $account->details_submitted,
-			'bank_last4' => $account->details_submitted,
-			'account_holder_name' => $account->details_submitted,
+			
         ];
     }
 
@@ -240,7 +223,7 @@ class StripeInfoService
 		$account = \Stripe\Account::retrieve();
 		$payout_schedule = $account->settings->payouts->schedule;
 		$interval = $payout_schedule->interval; // daily, weekly, monthly
-		$delay_days = $account->settings->payouts->schedule_delay; // 延迟天数（如3表示T+3）
+		$delay_days = $account->settings->payouts->schedule->delay_days; // 延迟天数（如3表示T+3）
 		echo '账户出款周期:'. $delay_days."\n";
 		echo '账户出款频率:'. $interval."\n";		
 		foreach ($payouts as $payout) {
@@ -254,6 +237,76 @@ class StripeInfoService
 		return [];
 	}
 	
+	function exportSuccessfulChargesToCSV($csvFile = TRANSACTION_FILE, $limit = 100) {
+		$latestCharge = Charge::all([
+			'limit' => 1,
+			'created' => ['lte' => time()],
+			'status' => 'succeeded'
+		])->first();
+
+		if (!$latestCharge) {
+			echo "❌ 未找到成功交易。\n";
+			return;
+		}
+
+		$latestTime = $latestCharge->created;
+		$startTime = strtotime('-30 days', $latestTime);
+
+		echo "📅 查询区间：".gmdate('Y-m-d H:i:s', $startTime)." 到 ".gmdate('Y-m-d H:i:s', $latestTime)."\n";
+
+		// 第二步：获取符合时间段的所有成功交易（全部）
+		$params = [
+			'created' => [
+				'gte' => $startTime,
+				'lte' => $latestTime,
+			],
+			'limit' => 100,
+		];
+
+		$output = fopen(TRANSACTION_FILE, 'w');
+
+		// 写入表头
+		fputcsv($output, [
+			'Charge ID',
+			'Created date (UTC)',
+			'Customer Email',
+			'Customer Phone',
+			'Shipping Name',
+			'Shipping Address Line1',
+			'Shipping Address City',
+			'Shipping Address State',
+			'Shipping Address Country',
+			'Shipping Address Postal Code'
+		]);
+
+		$count = 0;
+
+		foreach (Charge::all($params)->autoPagingIterator() as $charge) {
+			if ($charge->status !== 'succeeded') {
+				continue;
+			}
+
+			$row = [
+				$charge->id,
+				gmdate('Y-m-d H:i:s', $charge->created),
+				$charge->billing_details->email ?? '',
+				$charge->billing_details->phone ?? '',
+				$charge->shipping->name ?? '',
+				$charge->shipping->address->line1 ?? '',
+				$charge->shipping->address->city ?? '',
+				$charge->shipping->address->state ?? '',
+				$charge->shipping->address->country ?? '',
+				$charge->shipping->address->postal_code ?? '',
+			];
+
+			fputcsv($output, $row);
+			$count++;
+		}
+
+		fclose($output);
+		echo "✅ 共导出成功交易 $count 条，文件：{TRANSACTION_FILE}\n";
+	}
+
     public function getBalance(): array
     {
         $balance = Balance::retrieve();
@@ -301,6 +354,10 @@ class StripeInfoService
 		if($type=='payout'){ 
 			echo "\n=== 出款计划 ===\n";
 			print_r($this->getSchedule()); 
+		}
+		if($type=='customers'){ 
+			echo "\n=== 最近一个月的客户记录 ===\n";
+			print_r($this->exportSuccessfulChargesToCSV()); 
 		}
 		if($type=='arn'){ 
 			echo "\n=== ARN与描述符信息 ===\n";
