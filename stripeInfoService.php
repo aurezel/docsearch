@@ -38,7 +38,7 @@ class StripeInfoService
 		$total = $available + $pending;
 		
 		 $externalAccounts = \Stripe\Account::allExternalAccounts(
-			$accountId,
+			$account->id,
 			['object' => 'bank_account']
 		);
 		
