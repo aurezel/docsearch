@@ -162,6 +162,50 @@ class StripeProductService
     return $priceChunks;
 }
 
+public function addOneOffPricesByProductName(string $productName, array $prices): void
+{
+    $hasMore = true;
+    $startingAfter = null;
+    $productId = null;
+
+    while ($hasMore) {
+        $params = ['limit' => 100];
+        if ($startingAfter) {
+            $params['starting_after'] = $startingAfter;
+        }
+
+        $products = Product::all($params);
+
+        foreach ($products->data as $product) {
+            if ($product->name === $productName) {
+                $productId = $product->id;
+                break 2;
+            }
+        }
+
+        $hasMore = $products->has_more;
+        if ($hasMore) {
+            $startingAfter = end($products->data)->id;
+        }
+    }
+
+    if ($productId === null) {
+        throw new RuntimeException("未找到名称为 '{$productName}' 的产品");
+    }
+
+    foreach ($prices as $priceAmount) {
+        $unitAmount = intval(round($priceAmount * 100));
+
+        Price::create([
+            'unit_amount' => $unitAmount,
+            'currency' => 'usd',
+            'product' => $productId,
+            'type' => 'one_time',  // 一次性收费
+        ]);
+
+        echo "给产品 '{$productName}' 添加一次性价格 {$priceAmount} 成功\n";
+    }
+}
  public function updateLocalProductPrice(): void
     {
 		 

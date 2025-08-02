@@ -126,6 +126,7 @@ function handleProduct(array $options)
     if (($options['param'] ?? '') === 'create') {
         $product = $productService->createProducts();
         print_r($product);
+		return;
     }
 	 if (($options['param'] ?? '') === 'insert' && !empty($prices)) { 
 		$pricesArray = explode(',', $prices); 
