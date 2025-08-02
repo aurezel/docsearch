@@ -283,6 +283,7 @@ private function readLocalPrices(): array
         $allMatch = true;
 
         foreach ($localPrices as [$priceId, $localPrice]) {
+			echo 'test:'.$priceId." | "$localPrice;
             try {
                 $stripePriceObj = Price::retrieve($priceId);
                 if ($stripePriceObj->unit_amount === null) {
@@ -295,7 +296,7 @@ private function readLocalPrices(): array
                     echo "数据待更新：ID=$priceId，本地价格=$localPrice，Stripe价格=$stripePrice\n";
                     $allMatch = false;
                 } else {
-                    echo "价格一致：ID=$priceId，价格=$localPrice\n";
+                    echo "价格一致：ID={$priceId}，价格={$localPrice}\n";
                 }
             } catch (Exception $e) {
                 echo "获取Stripe价格失败，ID=$priceId，错误: " . $e->getMessage() . "\n";
