@@ -107,7 +107,7 @@ function handleRefund(array $options)
 function handleProduct(array $options)
 {
     $count = $options['count'] ?? 3;
-    $prices = $options['prices'] ?? null;
+    $prices = $options['prices'] ?? null; 
     $productNames = $options['names'] ?? getDefaultProductNames();
 
     $productService = new StripeProductService(STRIPE_SK, PRODUCT_PRICE, LOCAL_CURRENCY, $productNames, $count, 1);
@@ -125,6 +125,13 @@ function handleProduct(array $options)
 
     if (($options['param'] ?? '') === 'create') {
         $product = $productService->createProducts();
+        print_r($product);
+    }
+	 if (($options['param'] ?? '') === 'insert' && !empty($prices)) { 
+		$pricesArray = explode(',', $prices); 
+		$pricesArray = array_map('floatval', $pricesArray);
+	
+        $product = $productService->addOneOffPricesByProductName($productNames,$pricesArray);
         print_r($product);
     }
 }
