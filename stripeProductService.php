@@ -37,7 +37,7 @@ class StripeProductService
 			echo "产品ID: " . $product->id . "，产品名: " . $product->name . PHP_EOL;
 
 			// 根据产品ID获取对应的价格列表
-			$prices = \Stripe\Price::all(['product' => $product->id, 'limit' => 20]);
+			$prices = \Stripe\Price::all(['product' => $product->id, 'limit' => 100]);
 
 			if (count($prices->data) === 0) {
 				echo "  无价格" . PHP_EOL;
@@ -162,6 +162,109 @@ class StripeProductService
     return $priceChunks;
 }
 
+ public function updateLocalProductPrice(): void
+    {
+		$productCsv =  'product.csv'
+        $handle = fopen($productCsv, 'w');
+        if (!$handle) {
+            throw new RuntimeException("无法打开文件写入: {$productCsv}");
+        }
+
+        $hasMore = true;
+        $startingAfter = null;
+
+        while ($hasMore) {
+            $params = ['limit' => 100];
+            if ($startingAfter) {
+                $params['starting_after'] = $startingAfter;
+            }
+
+            $prices = Price::all($params);
+
+            foreach ($prices->data as $price) {
+                $priceId = $price->id;
+                $unitAmount = $price->unit_amount;
+                if ($unitAmount === null) {
+                    continue;
+                }
+                $priceValue = number_format($unitAmount / 100, 2, '.', '');
+                fputcsv($handle, [$priceId, $priceValue]);
+            }
+
+            $hasMore = $prices->has_more;
+            if ($hasMore) {
+                $startingAfter = end($prices->data)->id;
+            }
+        }
+
+        fclose($handle);
+    }
+}
+
+private function readLocalPrices(): array
+    {
+        if (!file_exists($this->csvFile)) {
+            throw new RuntimeException("本地CSV文件不存在: {$this->csvFile}");
+        }
+
+        $lines = file($this->csvFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $count = count($lines);
+
+        if ($count < 3) {
+            throw new RuntimeException("CSV文件记录少于3条，无法完成比较");
+        }
+
+        $indexes = [0, 1, $count - 1]; // 前两条和最后一条
+        $prices = [];
+
+        foreach ($indexes as $i) {
+            $data = str_getcsv($lines[$i]);
+            if (count($data) < 2) {
+                throw new RuntimeException("CSV行格式不正确: " . $lines[$i]);
+            }
+            $priceId = trim($data[0]);
+            $priceVal = floatval($data[1]);
+            $prices[] = [$priceId, $priceVal];
+        }
+
+        return $prices;
+    }
+    /**
+     * 与Stripe线上价格比较本地价格
+     * @return void
+     */
+    public function compare(): void
+    {
+        $localPrices = $this->readLocalPrices();
+
+        $allMatch = true;
+
+        foreach ($localPrices as [$priceId, $localPrice]) {
+            try {
+                $stripePriceObj = Price::retrieve($priceId);
+                if ($stripePriceObj->unit_amount === null) {
+                    echo "跳过无价格的Stripe ID: $priceId\n";
+                    continue;
+                }
+                $stripePrice = $stripePriceObj->unit_amount / 100;
+
+                if (abs($localPrice - $stripePrice) > 0.001) {
+                    echo "数据待更新：ID=$priceId，本地价格=$localPrice，Stripe价格=$stripePrice\n";
+                    $allMatch = false;
+                } else {
+                    echo "价格一致：ID=$priceId，价格=$localPrice\n";
+                }
+            } catch (Exception $e) {
+                echo "获取Stripe价格失败，ID=$priceId，错误: " . $e->getMessage() . "\n";
+                $allMatch = false;
+            }
+        }
+
+        if ($allMatch) {
+            echo "价格数据最新，全部一致。\n";
+        }
+    }
+}
     /**
      * 根据type生成不同的CSV文件
      * type=1 生成一个CSV，只含价格和价格ID

@@ -115,6 +115,12 @@ function handleProduct(array $options)
     if (($options['param'] ?? '') === 'priceList') {
         $productService->priceList();
         return;
+    }elseif(($options['param'] ?? '') === 'update'){
+		 $productService->updateLocalProductPrice();
+        return;
+    }elseif(($options['param'] ?? '') === 'status'){
+		 $productService->compare();
+        return;
     }
 
     if (($options['param'] ?? '') === 'create') {
