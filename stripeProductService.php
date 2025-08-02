@@ -262,7 +262,7 @@ private function readLocalPrices(): array
         if ($allMatch) {
             echo "价格数据最新，全部一致。\n";
         }
-    }
+    
 }
     /**
      * 根据type生成不同的CSV文件
