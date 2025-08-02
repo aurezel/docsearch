@@ -198,7 +198,6 @@ class StripeProductService
         }
 
         fclose($handle);
-    }
 }
 
 private function readLocalPrices(): array
