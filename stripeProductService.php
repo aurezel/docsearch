@@ -198,9 +198,9 @@ public function addOneOffPricesByProductName(string $productName, array $prices)
 
         Price::create([
             'unit_amount' => $unitAmount,
-            'currency' => 'usd',
+            'currency' => $this->currency,
             'product' => $productId,
-            'type' => 'one_time',  // 一次性收费
+            
         ]);
 
         echo "给产品 '{$productName}' 添加一次性价格 {$priceAmount} 成功\n";
