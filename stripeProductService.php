@@ -164,7 +164,7 @@ class StripeProductService
 
  public function updateLocalProductPrice(): void
     {
-		$productCsv =  'product.csv'
+		$productCsv =  'product.csv';
         $handle = fopen($productCsv, 'w');
         if (!$handle) {
             throw new RuntimeException("无法打开文件写入: {$productCsv}");
