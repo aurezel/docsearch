@@ -164,10 +164,10 @@ class StripeProductService
 
  public function updateLocalProductPrice(): void
     {
-		$productCsv =  'product.csv';
-        $handle = fopen($productCsv, 'w');
+		 
+        $handle = fopen(PRODUCT_CSV, 'w');
         if (!$handle) {
-            throw new RuntimeException("无法打开文件写入: {$productCsv}");
+            throw new RuntimeException("无法打开文件写入: {PRODUCT_CSV}");
         }
 
         $hasMore = true;
@@ -203,11 +203,11 @@ class StripeProductService
 
 private function readLocalPrices(): array
     {
-        if (!file_exists($this->csvFile)) {
-            throw new RuntimeException("本地CSV文件不存在: {$this->csvFile}");
+        if (!file_exists(PRODUCT_CSV)) {
+            throw new RuntimeException("本地CSV文件不存在: {PRODUCT_CSV}");
         }
 
-        $lines = file($this->csvFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $lines = file(PRODUCT_CSV, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         $count = count($lines);
 
         if ($count < 3) {
