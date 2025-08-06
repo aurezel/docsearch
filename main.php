@@ -241,9 +241,12 @@ function handleInfo(array $options)
 
 function handleSearch(array $options)
 {
+	if (isset($options['emails']) && is_string($options['emails'])) {
+            $options['emails'] = array_map('intval', explode(',', $options['emails']));
+        }
     $searchParams = [
         'last4s' => anyToArray($options['last4s'] ?? ''),
-        'emails' => anyToArray($options['emails'] ?? ''),
+        'emails' => $options['emails'],//anyToArray($options['emails'] ?? ''),
         'transactionIds' => anyToArray($options['transIds'] ?? ''),
         'type' => $options['type'] ?? null,
         'date' => $options['date'] ?? null,
