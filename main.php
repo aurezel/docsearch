@@ -1,5 +1,6 @@
 <?php
 
+require_once 'configManager.php';
 require_once 'config.php';
 require_once 'stripeQueryService.php';
 require_once 'stripeRefundService.php';
@@ -10,6 +11,7 @@ require_once 'stripeInfoService.php';
 // 获取 CLI 参数
 $options = getopt('', [
     'refund',
+	'init',
     'transactionId:',
     'amount:',
     'product',
@@ -37,6 +39,8 @@ $options = getopt('', [
 	'id:'
 ]);
 
+//# 初始化config
+//php main.php --init --param=sk_live_abc,prices=
 //# 发起退款
 //php main.php --refund --transactionId=ch_123 --amount=2
 //
@@ -59,35 +63,79 @@ $options = getopt('', [
 //# 搜索
 //php main.php --search --last4s=1234,5678 --emails=test@example.com
 
-// === 退款处理 ===
-if (isset($options['refund'])) {
-    handleRefund($options);
+// === 初始化config ===
+$commands = [
+    'init'    => 'handleInit',
+    'refund'  => 'handleRefund',
+    'product' => 'handleProduct',
+    'webhook' => 'handleWebhook',
+    'info'    => 'handleInfo',
+    'search'  => 'handleSearch',
+];
 
-// === 产品处理 ===
-} elseif (isset($options['product'])) {
-    handleProduct($options);
-
-// === 创建 Webhook ===
-} elseif (isset($options['webhook'])) {
-    handleWebhook($options);
-
-// === 信息查询（账户、余额、ARN 等）===
-} elseif (isset($options['info'])) {
-    handleInfo($options);
-
-// === 搜索交易 ===
-} elseif (isset($options['search'])) {
-    handleSearch($options);
-
-} else {
-    echo "⚠️ Error: Invalid command.\n";
-    echo "Available: --refund | --product | --settings --param=webhook | --info | --search\n";
-    exit(1);
+// 遍历映射执行对应处理器
+foreach ($commands as $key => $handler) {
+    if (isset($options[$key])) {
+        if (function_exists($handler)) {
+            $handler($options);
+            return;
+        } else {
+            echo "⚠️ Error: handler '$handler' not found.\n";
+            exit(1);
+        }
+    }
 }
+
+// 未匹配任何命令，输出提示
+echo "⚠️ Error: Invalid command.\n";
+echo "Available commands:\n";
+echo "  --" . implode(" | --", array_keys($commands)) . "\n";
+exit(1);
 
 //
 // ========== 以下为功能封装 ==========
 //
+
+function handleInit(array $options)
+{
+    try {
+        $config = new ConfigManager('config.php');
+		
+		if (isset($options['prices']) && is_string($options['prices'])) {
+            $options['prices'] = array_map('intval', explode(',', $options['prices']));
+        }
+		
+        // 定义允许设置的字段及其映射关系
+        $fields = [
+            'param'    => 'STRIPE_SK',
+            'currency' => 'LOCAL_CURRENCY',
+            'prices'   => 'PRODUCT_PRICE'
+        ];
+
+        foreach ($fields as $optionKey => $configKey) {
+            if (isset($options[$optionKey])) {
+                $config->set($configKey, $options[$optionKey]);
+            }
+        }
+
+        // 保存配置文件
+        $config->save();
+
+        // 输出当前 STRIPE_SK 以确认修改成功
+		if(isset($options['param'])){ 
+			echo "当前 STRIPE_SK: " . $config->get('STRIPE_SK') . PHP_EOL; 
+		}
+		if(isset($options['currency'])){ 
+			echo "当前 LOCAL_CURRENCY: " . $config->get('LOCAL_CURRENCY') . PHP_EOL; 
+		}
+		if(isset($options['prices'])){ 
+			echo "当前 PRODUCT_PRICE: " . implode(",",$config->get('PRODUCT_PRICE')) . PHP_EOL; 
+		}
+    } catch (Exception $e) {
+        echo "配置处理失败: " . $e->getMessage() . PHP_EOL;
+    }
+	return;
+}
 
 function handleRefund(array $options)
 {
@@ -102,6 +150,7 @@ function handleRefund(array $options)
         echo "✅ Refund processed for transaction ID: $transactionId\n";
         echo "🧾 Refund response: " . json_encode($refund, JSON_PRETTY_PRINT) . "\n";
     }
+	return;
 }
 
 function handleProduct(array $options)
