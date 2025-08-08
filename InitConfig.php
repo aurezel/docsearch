@@ -1,6 +1,6 @@
 <?php
 
-class ConfigManager
+class InitConfig
 {
     private $filePath;
     private $content;

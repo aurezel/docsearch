@@ -1,6 +1,6 @@
 <?php
 
-require_once 'configManager.php';
+require_once 'InitConfig.php';
 require_once 'config.php';
 require_once 'stripeQueryService.php';
 require_once 'stripeRefundService.php';
@@ -99,21 +99,48 @@ exit(1);
 function handleInit(array $options)
 {
     try {
-        $config = new ConfigManager('config.php');
+        $config = new InitConfig('config.php');
 		
 		if (isset($options['prices']) && is_string($options['prices'])) {
             $options['prices'] = array_map('intval', explode(',', $options['prices']));
         }
 		
+		$pk = null;
+        $sk = null;
+        if (isset($options['param'])) {
+            $params = explode(',', $options['param']);
+            if (count($params) === 2) {
+                list($pk, $sk) = $params;
+            } else {
+                // 只有一个值，当sk
+                $sk = trim($params[0]);
+            }
+        }
+		
         // 定义允许设置的字段及其映射关系
-        $fields = [
-            'param'    => 'STRIPE_SK',
+        $fields = [ 
             'currency' => 'LOCAL_CURRENCY',
             'prices'   => 'PRODUCT_PRICE'
         ];
+		
+		if ($pk !== null) {
+            $fields['param_pk'] = 'STRIPE_PK';
+        }
+        if ($sk !== null) {
+            $fields['param_sk'] = 'STRIPE_SK';
+        }
 
+        // 临时存储 param_pk 和 param_sk 的值，方便统一处理
+        $paramValues = [
+            'param_pk' => $pk,
+            'param_sk' => $sk,
+        ];
         foreach ($fields as $optionKey => $configKey) {
-            if (isset($options[$optionKey])) {
+            if (array_key_exists($optionKey, $paramValues)) {
+                if ($paramValues[$optionKey] !== null) {
+                    $config->set($configKey, $paramValues[$optionKey]);
+                }
+            } elseif (isset($options[$optionKey])) {
                 $config->set($configKey, $options[$optionKey]);
             }
         }
@@ -122,9 +149,12 @@ function handleInit(array $options)
         $config->save();
 
         // 输出当前 STRIPE_SK 以确认修改成功
-		if(isset($options['param'])){ 
-			echo "当前 STRIPE_SK: " . $config->get('STRIPE_SK') . PHP_EOL; 
-		}
+		 if ($pk !== null) {
+            echo "当前 STRIPE_PK: " . $config->get('STRIPE_PK') . PHP_EOL;
+        }
+        if ($sk !== null) {
+            echo "当前 STRIPE_SK: " . $config->get('STRIPE_SK') . PHP_EOL;
+        }
 		if(isset($options['currency'])){ 
 			echo "当前 LOCAL_CURRENCY: " . $config->get('LOCAL_CURRENCY') . PHP_EOL; 
 		}
