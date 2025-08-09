@@ -61,7 +61,7 @@ class StripeInfoService
 		} else {
 			echo "No payout schedule info found." . PHP_EOL;
 		}
-        return $info
+        return $info;
     }
 
     public function getChargeStats(): array
