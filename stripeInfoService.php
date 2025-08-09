@@ -37,18 +37,31 @@ class StripeInfoService
 		// 总余额是可用余额 + 待到账余额
 		$total = $available + $pending;
 		
-        return [
+		$info = [
             'id' => $account->id,
             'email' => $account->email,
+			'url' => $account->business_profile->url ?? 'N/A',
+			'country' => $account->country ?? 'N/A',
+			'default_currency' => $account->default_currency ?? 'N/A',
+			'timezone' => $account->settings->dashboard->timezone ?? 'N/A', 
             'charges_enabled' => $account->charges_enabled ? "true":"false",
             'payouts_enabled' => $account->payouts_enabled ? "true":"false",
             'total' => number_format($total / 100, 2),
             'formatted_available' => number_format($available / 100, 2),
             'formatted_pending' => number_format($pending / 100, 2),
             'details_submitted' => $account->details_submitted,
-            'descriptor' => $account->settings['payments']['statement_descriptor'] ?? 'N/A',
-			
+            'descriptor' => $account->settings['payments']['statement_descriptor'] ?? 'N/A', 
         ];
+		
+		$payoutSchedule = $account->settings->payouts->schedule ?? null;
+
+		if ($payoutSchedule) {
+			$info['delay_days'] = $payoutSchedule->delay_days ?? 'N/A';
+			$info['interval'] = $payoutSchedule->interval ?? 'N/A'; 
+		} else {
+			echo "No payout schedule info found." . PHP_EOL;
+		}
+        return $info
     }
 
     public function getChargeStats(): array
