@@ -114,12 +114,12 @@ class StripeInfoService
 		$formatData = [
 			'Stripe V5',
 			$email,
-			'3000000',
 			defined('STRIPE_PK') ? STRIPE_PK : '',
 			defined('STRIPE_SK') ? STRIPE_SK : '',
 			$OrderRandom,
 			$url,
 			$pay,
+			'3000000',
 			'1000',
 			'10000',
 			'10000',
