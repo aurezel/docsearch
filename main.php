@@ -216,7 +216,7 @@ function handleProduct(array $options)
 		$pricesArray = array_map('floatval', $pricesArray);
 	
         $product = $productService->addOneOffPricesByProductName($productNames,$pricesArray);
-        print_r($product);
+        //print_r($product);
     }
 }
 
