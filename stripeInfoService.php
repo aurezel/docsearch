@@ -55,8 +55,12 @@ class StripeInfoService
 		try {
 			$config = new InitConfig('config.php');
 
-			// set 方法里面判断了数组，转换成 PHP 数组语法写入
-			$config->set('STRIPE_ACCOUNT_INFO', $info);
+			// set 方法里面判断了数组，转换成 PHP 数组语法写入 
+			$config->set('STRIPE_ID', $account->id);
+			$config->set('STRIPE_EMAIL', $account->email);
+			$config->set('STRIPE_URL',  $account->business_profile->url ?? '');
+			$config->set('STRIPE_TIMEZONE', $account->settings->dashboard->timezone ?? '');
+			$config->set('STRIPE_COUNTRY', $account->country ?? '');
 			  
 			$config->save();
 
@@ -82,17 +86,17 @@ class StripeInfoService
 		$pay = '';
 		$notify = '';
 
-		if (defined('STRIPE_ACCOUNT_INFO')) {
-			$stripeAccount = STRIPE_ACCOUNT_INFO;
-
-			$email = $stripeAccount['email'] ?? '';
-
-			$url = $stripeAccount['url'] ?? '';
+		if (defined('STRIPE_EMAIL')) {
+			$email = STRIPE_EMAIL;
+		}
+		
+		if (defined('STRIPE_URL')) {
+			$url = STRIPE_URL;
 			// 去掉 http(s):// 和末尾斜杠
 			$url = preg_replace('#^https?://#', '', $url);
-			$url = rtrim($url, '/');
-		}
-
+			$url = rtrim($url, '/'); 
+		} 
+		  
 		if (defined('PAY_PATH')) {
 			$pay = PAY_PATH;
 			if ($pay !== '' && $pay[0] !== '/') {
