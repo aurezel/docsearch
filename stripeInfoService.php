@@ -129,7 +129,7 @@ class StripeInfoService
 			'3',
 		];
 
-		return implode("\t", $formatData)."\n\n\n\n".$notify;
+		return implode("\t", $formatData)."\n\n\n".$notify."\n\n";
 	}
 	
 	public function generateRandomOrderString(int $minLength = 7, int $maxLength = 14): string
