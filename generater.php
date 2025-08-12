@@ -1,6 +1,6 @@
 #!/usr/bin/env php
 <?php
-
+require_once 'InitConfig.php';  // 请调整路径
 class PathConfigurator {
     private $baseName;
     private $suffix;
@@ -17,6 +17,7 @@ class PathConfigurator {
             $this->validateInputs();
             $this->updateEnvFile();
             $this->updateHtaccess();
+			$this->updateConfigPhp();
             $this->displaySuccess();
         } catch (Exception $e) {
             $this->displayError($e->getMessage());
@@ -95,7 +96,22 @@ EOT;
             throw new Exception("Failed to update .htaccess file");
         }
     }
-    
+     private function updateConfigPhp() {
+        $configFile = 'config.php';  // 你的配置文件路径，调整成实际路径
+        if (!file_exists($configFile)) {
+            throw new Exception("配置文件不存在: $configFile");
+        }
+
+        $initConfig = new InitConfig($configFile);
+
+        $payPath = "/{$this->baseName}pay/pay{$this->suffix}";
+        $notifyPath = "/{$this->baseName}pay/notify{$this->suffix}";
+
+        $initConfig->set("PAY_PATH", $payPath);
+        $initConfig->set("NOTIFY_PATH", $notifyPath);
+
+        $initConfig->save();
+    }
     private function displaySuccess() {
         echo "\n✅ Configuration updated successfully!\n\n";
         echo "Endpoints configured:\n";

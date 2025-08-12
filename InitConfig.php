@@ -22,22 +22,23 @@ class InitConfig
     }
 
     public function set($constantName, $value)
-    {
-        if (is_array($value)) {
-            $replacement = 'define("' . $constantName . '", [' . implode(',', array_map('intval', $value)) . ']);';
-        } else {
-            $replacement = 'define("' . $constantName . '", "' . addslashes($value) . '");';
-        }
+	{
+		if (is_array($value)) {
+			$replacement = 'define("' . $constantName . '", [' . implode(',', array_map('intval', $value)) . ']);';
+		} else {
+			$replacement = 'define("' . $constantName . '", "' . addslashes($value) . '");';
+		}
 
-        $pattern = '/define\("' . preg_quote($constantName, '/') . '",\s*(\[.*?\]|".*?")\);/s';
+		$pattern = '/define\("' . preg_quote($constantName, '/') . '",\s*(\[.*?\]|".*?")\);/s';
 
-        if (preg_match($pattern, $this->content)) {
-            $this->content = preg_replace($pattern, $replacement, $this->content);
-        } else {
-            // 不存在该项，添加到末尾
-            $this->content .= "\ndefine(\"$constantName\", " . (is_array($value) ? '[' . implode(',', array_map('intval', $value)) . ']' : '"' . addslashes($value) . '"') . ");\n";
-        }
-    }
+		if (preg_match($pattern, $this->content)) {
+			// 直接替换，不要加额外换行，保持一行一个定义
+			$this->content = preg_replace($pattern, $replacement, $this->content);
+		} else {
+			// 不存在该常量，追加到内容末尾，且确保换行
+			$this->content .= PHP_EOL . $replacement . PHP_EOL;
+		}
+	}
 
     public function get($constantName)
     {

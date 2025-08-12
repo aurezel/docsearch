@@ -17,6 +17,8 @@ $options = getopt('', [
     'product',
     'param:',
     'prices:',
+    'pay_path:',
+    'notify_path:',
     'count:',
     'names:',
     'search',
@@ -98,7 +100,7 @@ exit(1);
 
 function handleInit(array $options)
 {
-    try {
+    try { 
         $config = new InitConfig('config.php');
 		
 		if (isset($options['prices']) && is_string($options['prices'])) {
@@ -120,7 +122,9 @@ function handleInit(array $options)
         // 定义允许设置的字段及其映射关系
         $fields = [ 
             'currency' => 'LOCAL_CURRENCY',
-            'prices'   => 'PRODUCT_PRICE'
+            'prices'   => 'PRODUCT_PRICE',
+            'pay_path'   => 'PAY_PATH',
+            'notify_path'   => 'NOTIFY_PATH'
         ];
 		
 		if ($pk !== null) {
@@ -263,9 +267,9 @@ function handleInfo(array $options)
 {
     $currency = $options['currency'] ?? 'usd';
     $param = $options['param'] ?? 'account';
-    $param = in_array($param, ['account', 'balance', 'arn', 'payout','analysis','customers'], true) ? $param : 'account';
+    $param = in_array($param, ['account', 'balance', 'arn', 'payout','analysis','customers','stats'], true) ? $param : 'account';
 
-    $infoService = new StripeInfoService(STRIPE_SK, $currency);
+    $infoService = new StripeInfoService(STRIPE_SK, $currency); 
     $infoService->getAllInfo($param);
 }
 

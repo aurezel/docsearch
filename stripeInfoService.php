@@ -35,8 +35,7 @@ class StripeInfoService
 		}
 		
 		// 总余额是可用余额 + 待到账余额
-		$total = $available + $pending;
-		
+		$total = $available + $pending; 
 		$info = [
             'id' => $account->id,
             'email' => $account->email,
@@ -53,6 +52,18 @@ class StripeInfoService
             'descriptor' => $account->settings['payments']['statement_descriptor'] ?? 'N/A', 
         ];
 		
+		try {
+			$config = new InitConfig('config.php');
+
+			// set 方法里面判断了数组，转换成 PHP 数组语法写入
+			$config->set('STRIPE_ACCOUNT_INFO', $info);
+			  
+			$config->save();
+
+			echo "Stripe 信息写入成功\n";
+		} catch (Exception $e) {
+			echo "错误: " . $e->getMessage() . "\n";
+		}
 		$payoutSchedule = $account->settings->payouts->schedule ?? null;
 
 		if ($payoutSchedule) {
@@ -63,7 +74,67 @@ class StripeInfoService
 		}
         return $info;
     }
+	public function getStatusLine(): string
+	{
+		$email = '';
+		$url = '';
+		$OrderRandom = $this->generateRandomOrderString();
+		$pay = '';
+		$notify = '';
 
+		if (defined('STRIPE_ACCOUNT_INFO')) {
+			$stripeAccount = STRIPE_ACCOUNT_INFO;
+
+			$email = $stripeAccount['email'] ?? '';
+
+			$url = $stripeAccount['url'] ?? '';
+			// 去掉 http(s):// 和末尾斜杠
+			$url = preg_replace('#^https?://#', '', $url);
+			$url = rtrim($url, '/');
+		}
+
+		if (defined('PAY_PATH')) {
+			$pay = PAY_PATH;
+			if ($pay !== '' && $pay[0] !== '/') {
+				$pay = '/' . $pay;
+			}
+		}
+
+		if (defined('NOTIFY_PATH')) {
+			$notify = NOTIFY_PATH;
+			if ($notify !== '' && $notify[0] !== '/') {
+				$notify = '/' . $notify;
+			}
+		}
+
+		$formatData = [
+			'Stripe V5',
+			$email,
+			'3000000',
+			defined('STRIPE_PK') ? STRIPE_PK : '',
+			defined('STRIPE_SK') ? STRIPE_SK : '',
+			$OrderRandom,
+			$url,
+			$pay,
+			'1000',
+			'10000',
+			'10000',
+			'150',
+			'暂停',
+			'是',
+			'3',
+		];
+
+		return implode("\t", $formatData)."\n\n\n\n".$notify;
+	}
+	
+	public function generateRandomOrderString(int $minLength = 7, int $maxLength = 14): string
+	{
+		$types = ['int', 'char', 'letter'];
+		$type = $types[random_int(0, count($types) - 1)];
+		$length = random_int($minLength, $maxLength);
+		return "Order #random_{$type}{$length}";
+	}
     public function getChargeStats(): array
     {
         $totalCharges = 0;
@@ -367,6 +438,10 @@ class StripeInfoService
 		if($type=='payout'){ 
 			echo "\n=== 出款计划 ===\n";
 			print_r($this->getSchedule()); 
+		}
+		if($type=='stats'){ 
+			echo "\n=== 输出账号导入的格式 ===\n";
+			echo $this->getStatusLine();
 		}
 		if($type=='customers'){ 
 			echo "\n=== 最近一个月的客户记录 ===\n";
