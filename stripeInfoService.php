@@ -51,7 +51,26 @@ class StripeInfoService
             'details_submitted' => $account->details_submitted,
             'descriptor' => $account->settings['payments']['statement_descriptor'] ?? 'N/A', 
         ];
-		
+        if($timezone = $account->settings->dashboard->timezone){
+            date_default_timezone_set($timezone);
+        }
+        $firstCharge = \Stripe\Charge::all([
+            'limit' => 1,
+            'status' => 'succeeded',
+            'order' => 'asc', // 从最早到最新
+        ])->data[0] ?? null;
+        if($firstCharge){
+            $info['first_charge'] = date('Y-m-d H:i:s', $firstCharge->created);
+        }
+        $lastCharge = \Stripe\Charge::all([
+            'limit' => 1,
+            'status' => 'succeeded',
+            'order' => 'desc', // 从最新到最早
+        ])->data[0] ?? null;
+		if($lastCharge){
+            $info['last_charge'] = date('Y-m-d H:i:s', $lastCharge->created);
+        }
+
 		try {
 			$config = new InitConfig('config.php');
 
