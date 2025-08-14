@@ -74,8 +74,7 @@ class StripeInfoService
 
         if (!empty($lastCharges->data)) {
             $latestCharge = $lastCharges->data[0];
-            $latestTimestamp = $latestCharge->created; // Unix 时间戳
-            $info['last_charge'] = date('Y-m-d H:i:s', $latestTimestamp);
+            $info['latest_charge'] = date('Y-m-d H:i:s', $latestCharge->created);
         }
 
 		try {
