@@ -54,21 +54,28 @@ class StripeInfoService
         if($timezone = $account->settings->dashboard->timezone){
             date_default_timezone_set($timezone);
         }
-        $firstCharge = \Stripe\Charge::all([
+
+        $firstCharges = \Stripe\Charge::all([
             'limit' => 1,
-            'status' => 'succeeded',
-            'order' => 'asc', // 从最早到最新
-        ])->data[0] ?? null;
-        if($firstCharge){
+            'ending_before' => null,
+            'starting_after' => null,
+            'created' => ['gte' => 0], // 从最早开始
+            'expand' => ['data.balance_transaction'],
+        ]);
+
+        if (!empty($firstCharges->data)) {
+            $firstCharge = end($firstCharges->data); // 最早的交易
             $info['first_charge'] = date('Y-m-d H:i:s', $firstCharge->created);
         }
-        $lastCharge = \Stripe\Charge::all([
+        $lastCharges = \Stripe\Charge::all([
             'limit' => 1,
-            'status' => 'succeeded',
-            'order' => 'desc', // 从最新到最早
-        ])->data[0] ?? null;
-		if($lastCharge){
-            $info['last_charge'] = date('Y-m-d H:i:s', $lastCharge->created);
+            'expand' => ['data.balance_transaction'], // 如果要更多细节
+        ]);
+
+        if (!empty($lastCharges->data)) {
+            $latestCharge = $lastCharges->data[0];
+            $latestTimestamp = $latestCharge->created; // Unix 时间戳
+            $info['last_charge'] = date('Y-m-d H:i:s', $latestTimestamp);
         }
 
 		try {
